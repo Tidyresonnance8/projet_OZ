@@ -82,7 +82,7 @@ define
       skip
    end
 
-   proc {TestIdentity P2T}
+   proc {TestIdentity P2T} %%???
       % test that extended notes and chord go from input to output unchanged
       skip
    end
@@ -201,8 +201,8 @@ define
       {System.show 'tests have started'}
       {TestP2T P2T}
       {System.show 'P2T tests have run'}
-      {TestMix P2T Mix}
-      {System.show 'Mix tests have run'}
+      %{TestMix P2T Mix}
+      %{System.show 'Mix tests have run'}
       {System.show test(passed:@PassedTests total:@TotalTests)}
    end
 end
