@@ -4,13 +4,20 @@
     Project2025
     System
     Property
- export 
+ export
+    isNote: IsNote
+    isChord: IsChord
+    isExtendedNote: IsExtendedNote
+    isExtendedChord: IsExtendedChord
+    noteToExtended: NoteToExtended
+    chordToExtended: ChordToExtended
     partitionToTimedList: PartitionToTimedList
  define
     %helpers
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     fun {IsNote Pi}
-        case Pi of silence then true 
+        case Pi of silence then true
+        [] H | T then false 
         [] Name#Octave then {Member Name [a b c d e f g]} 
         [] S then
             if {String.isAtom S} then 
@@ -58,7 +65,7 @@
             @A
         end
     in
-        if {Length Pi} == 1 then false 
+        if {Length Pi} =< 1 then false 
         else {IsExtendedChordA Pi A} end  
     end
 
@@ -176,14 +183,34 @@
         % TODO
 
         %case sur partition pour different cas: <note>|<chord>|<extended note>|<extended chord>|<transformation
-        case Partition of nil then nil 
-        [] Pi|P andthen {IsNote Pi} then {NoteToExtended Pi}|{PartitionToTimedList P}
-        [] Pi|P andthen {IsChord Pi} then {ChordToExtended Pi}|{PartitionToTimedList P}
-        [] Pi|P andthen {IsExtendedNote Pi} then Pi|{PartitionToTimedList P}
-        [] Pi|P andthen {IsExtendedChord Pi} then Pi|{PartitionToTimedList P}
+        case Partition of nil then nil
+        [] Pi|P andthen {IsNote Pi} == true then {NoteToExtended Pi} | {PartitionToTimedList P}
+        [] L|P andthen {IsChord L} == true then {ChordToExtended L} | {PartitionToTimedList P}
+        [] Pi|P andthen {IsExtendedNote Pi} == true then Pi | {PartitionToTimedList P}
+        [] Pi|P andthen {IsExtendedChord Pi} == true then Pi | {PartitionToTimedList P}
         %completer pour transformations
         else nil
         end 
     end
-
+    % a effacer avant de rendre 
+    /* 
+    local Cmaj4 Dmin5 P2 Test in
+        Cmaj4 = [a0 e b1]
+        Dmin5 = [c#2 d#3 e]
+        P2 = [Cmaj4 Dmin5]
+        fun {Test P}
+            case P of nil then nil 
+            [] L|T andthen {IsChord L} then {ChordToExtended L} | {Test T}
+            end
+        end
+        {Browse {Test P2}}
+    end*/
+    /*
+    Cmin4 = [c d#4 g]
+    P1 = [a0 b1 c#2 d#3 e silence]
+    Cmaj4 = [a0 e b1]
+    Dmin5 = [c#2 d#3 e]
+    {Browse {IsNote Dmin5}}
+    P2 = [Cmaj4 Dmin5 a0 b1 c#4 silence]
+    {Browse {PartitionToTimedList P2}}*/
 end

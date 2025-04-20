@@ -4,6 +4,7 @@ import
    Mix
    System
    Property
+   PartitionToTimedList
 export
    test: Test
 define
@@ -79,7 +80,14 @@ define
    end
 
    proc {TestChords P2T}
-      skip
+      Cmin4 = [c d#4 g]
+      Cmaj4 = [c e g]
+      Dmin5 = [d5 f5 a5]
+      DSharpmin = [d#5 f#5 a#5]
+      P2 = [Cmin4 Cmaj4 Dmin5 DSharpmin]
+      E2 = {Map P2 PartitionToTimedList.chordToExtended}
+   in
+      {AssertEquals {P2T P2} E2 "TestChords"}
    end
 
    proc {TestIdentity P2T} %%???
