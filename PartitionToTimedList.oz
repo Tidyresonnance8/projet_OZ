@@ -15,8 +15,10 @@
  define
     %helpers
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    declare  
     fun {IsNote Pi}
         case Pi of silence then true
+        [] note(...) then false 
         [] H | T then false 
         [] Name#Octave then {Member Name [a b c d e f g]} 
         [] S then
@@ -35,16 +37,19 @@
     %helper pour determiner si une <partition> item est un accord
     fun {IsChord Pi}
         A = {NewCell false}
-        fun {IsChordA Pi A}
+        B = {NewCell true}
+        proc {IsChordA Pi}
             for N in Pi do 
-                if {IsNote N} == false then A := false
+                if {IsNote N} == false then B := false
                 else A := true end 
             end
-            @A
+            
         end
     in
-        if {Length Pi} == 1 then false 
-        else {IsChordA Pi A} end  
+        {IsChordA Pi}
+        if {Length Pi} == 1 then false  
+        elseif @B == false then false
+        else true end
     end
 
     %helper pour determiner si une <partition item> est une extended note 
@@ -57,16 +62,21 @@
     %helper pour determiner si une <partition item> est un extended chord 
     fun {IsExtendedChord Pi}
         A = {NewCell false}
-        fun {IsExtendedChordA Pi A}
+        B = {NewCell true}
+        proc {IsExtendedChordA Pi}
             for N in Pi do 
-                if {IsExtendedNote N} == false then A := false
+                if {IsExtendedNote N} == false then B := false
                 else A := true end 
             end
-            @A
         end
     in
-        if {Length Pi} =< 1 then false 
-        else {IsExtendedChordA Pi A} end  
+        case Pi of note(...) then false
+        else 
+            {IsExtendedChordA Pi}
+            if {Length Pi} =< 1 then false 
+            elseif @B == false then false
+            else true end
+        end  
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -106,10 +116,6 @@
         elseif Chord == nil then nil  
         else {Exception.failure failure(invalidChord:Chord)} end
     end
-
-    
-
-    %{Browse {ChordToExtended [a0 b#4 c#7]}}
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -205,12 +211,14 @@
         end
         {Browse {Test P2}}
     end*/
-    /*
-    Cmin4 = [c d#4 g]
-    P1 = [a0 b1 c#2 d#3 e silence]
-    Cmaj4 = [a0 e b1]
-    Dmin5 = [c#2 d#3 e]
-    {Browse {IsNote Dmin5}}
-    P2 = [Cmaj4 Dmin5 a0 b1 c#4 silence]
-    {Browse {PartitionToTimedList P2}}*/
+    
+    Note_1 = note(name:a octave:4 sharp:false duration:1.0 instrument:none)
+    Note_2 = note(name:b octave:5 sharp:true duration:1.0 instrument:none)
+    Note_3 = note(name:c octave:5 sharp:true duration:1.0 instrument:none)
+    Dmin5 = [d5 f5 a5]
+
+    Extended_notesPartition = [Note_1 Note_2 Note_3]
+    L = {PartitionToTimedList Extended_notesPartition}
+    {Browse L}
+
 end

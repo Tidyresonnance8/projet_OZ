@@ -90,9 +90,18 @@ define
       {AssertEquals {P2T P2} E2 "TestChords"}
    end
 
-   proc {TestIdentity P2T} %%???
+   proc {TestIdentity P2T} 
       % test that extended notes and chord go from input to output unchanged
-      skip
+
+      %test pour extended notes:
+      Note_1 = note(name:a octave:4 sharp:false duration:1.0 instrument:none)
+      Note_2 = note(name:b octave:5 sharp:true duration:1.0 instrument:none)
+      Note_3 = note(name:c octave:5 sharp:true duration:1.0 instrument:none)
+
+      Extended_notesPartition = [Note_1 Note_2 Note_3]
+   in 
+      {AssertEquals {P2T Extended_notesPartition} Extended_notesPartition "TestIdentity"}
+
    end
 
    proc {TestDuration P2T}
