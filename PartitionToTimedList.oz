@@ -100,8 +100,6 @@
         else {Exception.failure failure(invalidChord:Chord)} end
     end
 
-    
-
     %{Browse {ChordToExtended [a0 b#4 c#7]}}
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -173,17 +171,163 @@
     {Browse {IsExtendedChord [Extended_1]}}*/
 
     fun {PartitionToTimedList Partition}
-        % TODO
-
-        %case sur partition pour different cas: <note>|<chord>|<extended note>|<extended chord>|<transformation
-        case Partition of nil then nil 
-        [] Pi|P andthen {IsNote Pi} then {NoteToExtended Pi}|{PartitionToTimedList P}
-        [] Pi|P andthen {IsChord Pi} then {ChordToExtended Pi}|{PartitionToTimedList P}
-        [] Pi|P andthen {IsExtendedNote Pi} then Pi|{PartitionToTimedList P}
-        [] Pi|P andthen {IsExtendedChord Pi} then Pi|{PartitionToTimedList P}
-        %completer pour transformations
-        else nil
-        end 
+        
+        nil
     end
 
-end
+    fun {Duration Second Partition}
+        Applatir = {PartitionToTimedList Partition}
+        for I in Applatir do
+            if I = note(...) then
+                Totalduration = Second + I.duration
+
+            if I = silence(duration: _) then
+                Totalduration = Second + I.duration
+            end
+        
+        Ratio = if Totalduration = 0.0 then 1.0 else second/Totalduration end
+
+        Applatir2 = {Map Applatir {NoteToExtended I}}
+        for I in Applatir2 do
+            if I = note(...) then
+                I.duration = I.duration * Ratio
+            end
+
+            if I = silence(duration: _) then
+                I.duration = I.duration * Ratio
+            end
+        end
+    end    
+    
+    fun {Stretch Factor Partition}
+        FlatList = {PartitionToTimedList Partition}
+        for I in FlatList do
+            if I = note(...) then
+                I.duration = I.duration * Factor
+            elseif I = silence(duration: _) then
+                I.duration = I.duration * Factor
+            elseif I = rest(duration: _) then
+                I.duration = I.duration * Factor
+            end
+        end  
+    end
+    
+    fun {Drone NoteOrChord Amount}
+        fun {ExtendedSound N}
+            case N of silence(duration:_) then silence(duration:_)
+            [] note(...) then note(...)
+            [] AtomeNote then {NoteToExtended AtomeNote}
+            [] ChordList then {Map chordList fun {$ NoteInChord}
+                {NoteToExtended NoteInChord}
+                end}
+            end
+        end
+    
+        sonEtendue = {ExtendedSound NoteOrChord}
+        fun {Repetition N X}
+            if X == 0 then nil
+            else N|{Repetition N X-1}
+            end
+        end
+    in 
+        {Repetition SonEtendue Amount}
+    end
+    
+    fun{Mute Amount}
+    
+    FlatList = {PartitionToTimedList Partition}
+    for I in FlatList do
+        if I = silence(duration: _) then
+            I.duration = I.duration * Amount
+        elseif I = note(...) then
+            I.duration = I.duration * Amount
+        end
+    end
+
+    % convertissons un nom et un bool en index chromatique
+    fun {NoteToChromaticIndex Name Sharp}
+        case Name of a then 0
+        [] b then 2
+        [] c then 4
+        [] d then 5
+        [] e then 7
+        [] f then 9
+        [] g then 11
+        end + if Sharp == true then 1 else 0 end
+    end
+
+    % convertissons un index chromatique en Name#sharp
+    fun {ChromaticIndexToNote Index Sharp}
+        case Index of 0 then c#false
+        [] 1 then c#true
+        [] 2 then d#false
+        [] 3 then d#true
+        [] 4 then e#false
+        [] 5 then f#false
+        [] 6 then f#true
+        [] 7 then g#false
+        [] 8 then g#true
+        [] 9 then a#false
+        [] 10 then a#true
+        [] 11 then b#false
+        end + if Sharp == true then 1 else 0 end
+    end
+
+    
+    fun{Transpose Semitones Partition}
+        FlatList = {PartitionToTimedList Partition}
+        local cellule in
+            cellule = {NewCell nil}
+            for I in FlatList do
+                case I of note(...) then
+                    BaseIndex = {NoteToChromaticIndex I.name I.sharp}
+                    NewIndex = BaseIndex + Semitones
+                    if NewIndex < 0 then
+                        NewIndex = 12 + NewIndex
+                    end
+                    if NewIndex > 11 then
+                        NewIndex = NewIndex - 12
+                    end
+                    I.name = {ChromaticIndexToNote NewIndex I.sharp}
+                    I.sharp = if NewIndex == 0 then false else true end
+                    I.duration = I.duration * Semitones
+                    I.instrument = I.instrument * Semitones
+                [] silence(duration: _) then
+                    BaseIndex = {NoteToChromaticIndex I.name I.sharp}
+                    NewIndex = BaseIndex + Semitones
+                    if NewIndex < 0 then
+                        NewIndex = 12 + NewIndex
+                    end
+                    if NewIndex > 11 then
+                        NewIndex = NewIndex - 12
+                    end
+                    I.name = {ChromaticIndexToNote NewIndex I.sharp}
+                    I.sharp = if NewIndex == 0 then false else true end
+                [] _|_ then
+                    if {IsNote I} == false then
+                        cellule := {NoteToExtended I} | @cellule
+                    end
+                [] nil then
+                    cellule := nil | @cellule
+                [] silence then
+                    cellule := silence(duration:1.0) | @cellule
+                [] Name#Octave then
+                    cellule := note(name:Name octave:Octave sharp:true duration:1.0 instrument:none) | @cellule
+                [] Atom then
+                    case {AtomToString Atom}
+                    of [_] then
+                        cellule := note(name:Atom octave:4 sharp:false duration:1.0 instrument:none) | @cellule
+                    [] [N O] then
+                        cellule := note(name:{StringToAtom [N]}
+                            octave:{StringToInt [O]}
+                            sharp:false
+                            duration:1.0
+                            instrument: none) | @cellule
+                    end
+                end
+            end
+
+            cellule := {Reverse @cellule}
+            @cellule
+        end
+    end
