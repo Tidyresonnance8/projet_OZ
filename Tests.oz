@@ -99,8 +99,15 @@ define
       Note_3 = note(name:c octave:5 sharp:true duration:1.0 instrument:none)
 
       Extended_notesPartition = [Note_1 Note_2 Note_3]
+
+      %test pur extended chords 
+      Note_4 = note(name:f octave:5 sharp:true duration:1.0 instrument:none)
+      Note_5 = note(name:g octave:5 sharp:false duration:1.0 instrument:none)
+
+      Extended_chordsPartition = [[Note_2 Note_3 Note_1] [Note_5 Note_4 Note_1] [Note_4 Note_2 Note_5]]
    in 
       {AssertEquals {P2T Extended_notesPartition} Extended_notesPartition "TestIdentity"}
+      {AssertEquals {P2T Extended_chordsPartition} Extended_chordsPartition "TestIdentity"}
 
    end
 
