@@ -95,7 +95,7 @@ define
 
       %test pour extended notes:
       Note_1 = note(name:a octave:4 sharp:false duration:1.0 instrument:none)
-      Note_2 = note(name:b octave:5 sharp:true duration:1.0 instrument:none)
+      Note_2 = note(name:b octave:5 sharp:false duration:1.0 instrument:none)
       Note_3 = note(name:c octave:5 sharp:true duration:1.0 instrument:none)
 
       Extended_notesPartition = [Note_1 Note_2 Note_3]
