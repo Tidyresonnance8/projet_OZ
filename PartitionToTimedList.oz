@@ -21,7 +21,6 @@ export
 define
     %helpers
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
     fun {IsNote Pi}
         case Pi of silence then true
         [] note(...) then true 
@@ -271,6 +270,7 @@ define
         %case sur partition pour different cas: <note>|<chord>|<extended note>|<extended chord>|<transformation
         case Partition of nil then nil
         [] Pi|P andthen {IsNote Pi} == true then {NoteToExtended Pi} | {PartitionToTimedList P}
+        %[] Pi|P andthen {IsNote Pi} == false then {Exception.failure failure(invalidNote:Pi)}|nil --> trouver autre endroit 
         [] Pi|P andthen {IsChord Pi} == true then {ChordToExtended Pi} | {PartitionToTimedList P}
         [] Pi|P andthen {IsExtendedChord Pi} == true then Pi | {PartitionToTimedList P}
         %completer pour transformations
@@ -284,10 +284,13 @@ define
             {Append {PartitionToTimedList {Drone S A}} {PartitionToTimedList P}}
         [] mute(amount:A)|P then
             {Append {PartitionToTimedList {Mute A}} {PartitionToTimedList P}}
-        [] Pi|P andthen {IsNote Pi} == false then {Exception.failure failure(invalidNote:Pi)}
         else nil 
         end
     end
+    /* 
+    declare
+    P1 = [a0 b1 c#2 k#3 e silence]
+    {Browse {PartitionToTimedList P1}}*/
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Transformations
