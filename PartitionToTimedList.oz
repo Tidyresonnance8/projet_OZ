@@ -21,7 +21,7 @@ export
 define
     %helpers
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    declare 
+    
     fun {IsNote Pi}
         case Pi of silence then true
         [] silence(...) then true
@@ -58,10 +58,10 @@ define
         end
     in 
         nil
-    end */
+    end 
             
                 
-    declare
+    
     %helper pour determiner si une <partition> item est un accord
     fun {IsChord Pi}
         A = {NewCell false}
@@ -87,7 +87,7 @@ define
         else false end
     end
 
-    declare
+    
     %helper pour determiner si une <partition item> est un extended chord 
     fun {IsExtendedChord Pi}
         A = {NewCell false}
@@ -110,7 +110,7 @@ define
     end
 
     %Helper pour convertir une note en int equivalent
-    declare
+    
     fun {MapNote Note Sharp}
         case Note#Sharp of c#false then 0
         [] c#true then 100
@@ -128,7 +128,7 @@ define
     end
 
     %Helper pour convertir int > 0 en note equivalent
-    declare
+    
     fun {MapintPos Int}
         case Int of 0 then c#false
         [] 100 then c#true
@@ -229,7 +229,7 @@ define
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    declare
+    
     % Translate a note to the extended notation.
     fun {NoteToExtended Note}
         case Note
@@ -267,7 +267,7 @@ define
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    declare
+    
     fun {PartitionToTimedList Partition} 
         %case sur partition pour different cas: <note>|<chord>|<extended note>|<extended chord>|<transformation
         case Partition of nil then nil
@@ -296,7 +296,7 @@ define
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Transformations
-    declare
+    
     %transpose
     fun {Transpose Semi Partition}
         local P TransposeInter in 
@@ -321,7 +321,7 @@ define
     {Browse {Transpose 100 Extended_notesPartition}} */
 
     %duration
-    declare
+    
     fun {Duration Second Partition}
         TotalDuration = {NewCell 0.0}
         for I in Partition do
@@ -364,7 +364,7 @@ define
 
 
     %stretch
-    declare
+    
     fun {Stretch Factor Partition}
         local
             FlatList
@@ -395,7 +395,7 @@ define
         end
     end
     
-    declare
+    
     %Drone
     fun {Drone NoteOrChord Amount}
         fun {ExtendedSound N}
@@ -428,7 +428,7 @@ define
         {Repetition SonEtendu Amount}
     end
 
-    declare
+    
     %Mute
     fun{Mute Amount}
         fun {MakeSilences N}
