@@ -12,6 +12,12 @@ export
     noteToExtended: NoteToExtended
     chordToExtended: ChordToExtended
     partitionToTimedList: PartitionToTimedList
+    transpose: Transpose
+    duration: Duration
+    stretch: Stretch
+    drone: Drone
+    mute: Mute
+    
 define
     %helpers
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -49,7 +55,7 @@ define
     end */
             
                 
-
+    declare
     %helper pour determiner si une <partition> item est un accord
     fun {IsChord Pi}
         A = {NewCell false}
@@ -68,6 +74,7 @@ define
         else true end
     end
 
+    declare
     %helper pour determiner si une <partition item> est une extended note 
     fun {IsExtendedNote Pi}
         case Pi of silence(duration:_) then true
@@ -75,6 +82,7 @@ define
         else false end
     end
 
+    declare
     %helper pour determiner si une <partition item> est un extended chord 
     fun {IsExtendedChord Pi}
         A = {NewCell false}
@@ -96,7 +104,7 @@ define
     end
 
     %Helper pour convertir une note en int equivalent
-    
+    declare
     fun {MapNote Note Sharp}
         case Note#Sharp of c#false then 0
         [] c#true then 100
@@ -114,7 +122,7 @@ define
     end
 
     %Helper pour convertir int > 0 en note equivalent
-     
+    declare
     fun {MapintPos Int}
         case Int of 0 then c#false
         [] 100 then c#true
@@ -215,7 +223,7 @@ define
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
- 
+    declare
     % Translate a note to the extended notation.
     fun {NoteToExtended Note}
         case Note
@@ -253,7 +261,7 @@ define
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
+    declare
     fun {PartitionToTimedList Partition} 
         %case sur partition pour different cas: <note>|<chord>|<extended note>|<extended chord>|<transformation
         case Partition of nil then nil
@@ -261,6 +269,16 @@ define
         [] Pi|P andthen {IsChord Pi} == true then {ChordToExtended Pi} | {PartitionToTimedList P}
         [] Pi|P andthen {IsExtendedChord Pi} == true then Pi | {PartitionToTimedList P}
         %completer pour transformations
+        [] duration(second:S partition:SubPartition)|P then
+            {Append {PartitionToTimedList {Duration S SubPartition}} {PartitionToTimedList P}}
+        [] stretch(factor:F partition:SubPartition)|P then
+            {Append {PartitionToTimedList {Stretch F SubPartition}} {PartitionToTimedList P}}
+        [] transpose(semi:S partition:SubPartition)|P then
+            {Append {PartitionToTimedList {Transpose S SubPartition}} {PartitionToTimedList P}}
+        [] drone(sound:S amount:A)|P then
+            {Append {PartitionToTimedList {Drone S A}} {PartitionToTimedList P}}
+        [] mute(amount:A)|P then
+            {Append {PartitionToTimedList {Mute A}} {PartitionToTimedList P}}
         else nil
         end
     end
@@ -363,8 +381,9 @@ define
             {List.reverse @Accumulator}
         end
     end
-
+    
     declare
+    %Drone
     fun {Drone NoteOrChord Amount}
         fun {ExtendedSound N}
             case N of note(name:Name octave:Octave sharp:Sharp duration:Duration instrument:Instrument) then
@@ -397,6 +416,7 @@ define
     end
 
     declare
+    %Mute
     fun{Mute Amount}
         fun {MakeSilences N}
             if N == 0 then nil
