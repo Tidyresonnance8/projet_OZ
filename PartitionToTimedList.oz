@@ -284,7 +284,8 @@ define
             {Append {PartitionToTimedList {Drone S A}} {PartitionToTimedList P}}
         [] mute(amount:A)|P then
             {Append {PartitionToTimedList {Mute A}} {PartitionToTimedList P}}
-        else nil
+        [] Pi|P andthen {IsNote Pi} == false then {Exception.failure failure(invalidNote:Pi)}
+        else nil 
         end
     end
     
