@@ -268,7 +268,8 @@ define
       note(name:b octave:8 sharp:false duration:1.0 instrument:none)]
 
       %test tranpose sur partition d'un accord simple
-      %Transp_part5 = {P2T [transpose(semi:2 partition:[[c d#4 g]])]} -->jsp pk ca prend plein de temps 
+      Transp_part5 = {P2T [transpose(semi:2 partition:[[note(name:c octave:4 sharp:false duration:1.0 instrument:none) 
+      note(name:d octave:4 sharp:true duration:1.0 instrument:none) note(name:g octave:4 sharp:false duration:1.0 instrument:none)]])]} %-->jsp pk ca prend plein de temps 
       Transp_part5_check5 = [[note(name:d octave:4 sharp:false duration:1.0 instrument:none) 
       note(name:f octave:4 sharp:false duration:1.0 instrument:none) 
       note(name:a octave:4 sharp:false duration:1.0 instrument:none)]]
@@ -278,7 +279,7 @@ define
       {AssertEquals Transp_part2 Transp_part2_check2 "Test_transpose"}
       {AssertEquals Transp_part3 Transp_part3_check3 "Test_transpose"}
       {AssertEquals Transp_part4 Transp_part4_check4 "Test_transpose"}
-      %{AssertEquals Transp_part5 Transp_part5_check5 "Test_transpose"}
+      {AssertEquals Transp_part5 Transp_part5_check5 "Test_transpose"}
 
       
    end
@@ -292,13 +293,13 @@ define
    end
       
    proc {TestP2T P2T}
-      {TestNotes P2T}
-      {TestChords P2T}
-      {TestIdentity P2T}
-      %{TestDuration P2T} %--> ne fonctionne pas (erreur d'assert)
+      {TestNotes P2T} %--> ca fonctionne 
+      {TestChords P2T} %--> ca fonctionne 
+      {TestIdentity P2T} %--> ca fonctionne
+      {TestDuration P2T}
       {TestStretch P2T} %--> fonctionne !
       %{TestDrone P2T} %ne fonctionne pas (erreur fatal (illega field c . 1 = _<optimized>))
-      %{TestMute P2T} %ne fonctionne pas pour le dernier test 
+      {TestMute P2T} %ne fonctionne pas pour le dernier test 
       {TestTranspose P2T}
       {TestP2TChaining P2T}
       {TestEmptyChords P2T}   

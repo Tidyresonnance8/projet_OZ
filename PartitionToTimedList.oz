@@ -315,11 +315,11 @@ define
                 [] note(name:Note octave:O sharp:Bol duration:D instrument:I)|Pi then
                     {TransposeNote {MapNote Note Bol} O Semi D I}|{TransposeInter Semi Pi}
                 [] silence(...)|Pi then silence(...)|{TransposeInter Semi Pi}
-                [] L|Pi andthen {IsExtendedChord L} == true then {TransposeChord L Semi}|{TransposeInter Semi P}
+                [] L|Pi andthen {IsExtendedChord L} == true then {TransposeChord L Semi}|{TransposeInter Semi Pi}
                 %rajoutez cas Ou Pi est un extended_chord 
                 end
             end 
-            thread {TransposeInter Semi*100 P} end 
+            {TransposeInter Semi*100 P}
         end 
     end
     /* 
