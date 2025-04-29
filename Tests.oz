@@ -178,21 +178,20 @@ define
       % test de drone sur une note
       P1 = [drone(sound:c amount:2)]
       E1 = [note(name:c octave:4 sharp:false duration:1.0 instrument:none)
-            note(name:e octave:4 sharp:false duration:1.0 instrument:none)
-            note(name:g octave:4 sharp:false duration:1.0 instrument:none)]
+            note(name:c octave:4 sharp:false duration:1.0 instrument:none)]
       % test de drone avec un silence
-      P2 = [drone(sound:d amount:1) silence(duration:2.0)]
-      E2 = [[note(name:d octave:4 sharp:false duration:1.0 instrument:none) note(name:f octave:4 sharp:true duration:1.0 instrument:none)]
+      P2 = [drone(sound:d amount:2) silence(duration:2.0)]
+      E2 = [note(name:d octave:4 sharp:false duration:1.0 instrument:none) note(name:d octave:4 sharp:false duration:1.0 instrument:none)
             silence(duration:2.0)]
       % test de drone avec une note dièse
-      P3 = [drone(sound:c#4 amount:1)]
-      E3 = [[note(name:c octave:4 sharp:true duration:1.0 instrument:none)
-            note(name:e octave:4 sharp:false duration:1.0 instrument:none)]]
+      P3 = [drone(sound:c#4 amount:2)]
+      E3 = [note(name:c octave:4 sharp:true duration:1.0 instrument:none)
+            note(name:c octave:4 sharp:true duration:1.0 instrument:none)]
       % test de drone sur drone
-      P4 = [drone(sound:e amount:1) drone(sound:d amount:0)]
-      E4 = [[note(name:e octave:4 sharp:false duration:1.0 instrument:none)
-            note(name:g octave:4 sharp:false duration:1.0 instrument:none)]
-            [note(name:d octave:4 sharp:false duration:1.0 instrument:none)]]
+      P4 = [drone(sound:e amount:2) drone(sound:d amount:3)]
+      E4 = [note(name:e octave:4 sharp:false duration:1.0 instrument:none) note(name:e octave:4 sharp:false duration:1.0 instrument:none)
+            note(name:d octave:4 sharp:false duration:1.0 instrument:none) note(name:d octave:4 sharp:false duration:1.0 instrument:none) 
+            note(name:d octave:4 sharp:false duration:1.0 instrument:none)]
    in
       {AssertEquals {P2T P1} E1 "TestDrone"}
       {AssertEquals {P2T P2} E2 "TestDrone"}
@@ -298,7 +297,7 @@ define
       {TestIdentity P2T}
       {TestDuration P2T} %--> ne fonctionne pas (erreur d'assert)
       {TestStretch P2T} %--> fonctionne !
-      %{TestDrone P2T} %ne fonctionne pas (erreur fatal (illega field c . 1 = _<optimized>))
+      {TestDrone P2T} %ne fonctionne pas (erreur fatal (illega field c . 1 = _<optimized>))
       {TestMute P2T} 
       {TestTranspose P2T}
       {TestP2TChaining P2T}

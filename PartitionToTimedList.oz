@@ -391,55 +391,31 @@ define
         end
     end
     
-    
     %Drone
-    fun {Drone NoteOrChord Amount}
-        fun {ExtendedSound N}
-            case N of note(name:Name octave:Octave sharp:Sharp duration:Duration instrument:Instrument) then
-                [note(name:Name octave:Octave sharp:Sharp duration:Duration instrument:Instrument)]
-            [] silence(duration:D) then
-                [silence(duration:D)]
-            [] rest(duration:D) then
-                [rest(duration:D)]
-            /*[] ChordList then
-                local
-                    NewChordAccumulator
-                in
-                    NewChordAccumulator = {NewCell nil}
-                    for chord in ChordList do
-                        NewChordAccumulator := note(name:chord.name octave:chord.octave sharp:chord.sharp duration:chord.duration instrument:chord.instrument) | @NewChordAccumulator
-                    end
-                    [{List.reverse @NewChordAccumulator}]*/
-                %end
-            [] H|_ then
-                if {IsList N} then
-                    local Accumulator in
-                        Accumulator = {NewCell nil}
-                        for Note in N do
-                            Accumulator := note(name:Note.name octave:Note.octave sharp:Note.sharp duration:Note.duration instrument:Note.instrument) | @Accumulator
-                        end
-                        [{List.reverse @Accumulator}]
-                    end
-                else 
-                    [rest(duration:1.0)]
-                end
-            else
-                [rest(duration:1.0)]
-            end
-        end
 
-        fun {Repetition N X}
-            if X == 0 then nil
-            else N|{Repetition N X-1}
+    %Amout > 0 
+    fun {Drone NoteOrChord Amount}
+        local ExtendedNote ExtendedChord DroneA in  
+            fun {DroneA NoteOrChord A Acc}
+                if A =< 0 then Acc
+                else {DroneA NoteOrChord A-1 NoteOrChord|Acc} end 
             end
-        end
-        SonEtendu = {ExtendedSound NoteOrChord}
-    in 
-        {Repetition SonEtendu Amount}
+
+            if {IsNote NoteOrChord} == true then 
+                ExtendedNote = {NoteToExtended NoteOrChord}
+                {DroneA ExtendedNote Amount nil}
+            elseif {IsChord NoteOrChord} == true then 
+                ExtendedChord = {ChordToExtended NoteOrChord}
+                {DroneA ExtendedChord Amount nil}
+            elseif {IsExtendedChord NoteOrChord} == true then 
+                ExtendedChord = NoteOrChord
+                {DroneA ExtendedChord Amount nil}
+            else {Exception.failure failure(invalidNoteOrChord:NoteOrChord)} end
+        end 
     end
 
-    
     %Mute
+    
     fun{Mute Amount}
         fun {MakeSilences N}
             if N == 0 then nil
