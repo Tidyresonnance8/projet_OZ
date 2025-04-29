@@ -130,18 +130,18 @@ define
    proc {TestDuration P2T}
       % test de duration sur plusieurs notes
       P1 = [duration(second:6.0 partition:[a0 b0 c0])]
-      E1 = [note(name:a octave:0 sharp:false duration:6.0 instrument:none)
-            note(name:b octave:0 sharp:false duration:6.0 instrument:none)
-            note(name:c octave:0 sharp:false duration:6.0 instrument:none)]
+      E1 = [note(name:a octave:0 sharp:false duration:2.0 instrument:none)
+            note(name:b octave:0 sharp:false duration:2.0 instrument:none)
+            note(name:c octave:0 sharp:false duration:2.0 instrument:none)]
       % test de duration sur une note
       P2 = [duration(second:3.0 partition:[c])]
       E2 = [note(name:c octave:4 sharp:false duration:3.0 instrument:none)]
       % test de duration avec silence
       P3 = [duration(second:2.0 partition:[a4 silence])]
-      E3 = [note(name:a octave:4 sharp:false duration:2.0 instrument:none)
-            silence(duration:2.0)]
+      E3 = [note(name:a octave:4 sharp:false duration:1.0 instrument:none)
+            silence(duration:1.0)]
       % test de duration sur un accord
-      P4 = [duration(second:4.0 partition:[a b])]
+      P4 = [duration(second:4.0 partition:[[a b]])]
       E4 = [[note(name:a octave:4 sharp:false duration:4.0 instrument:none)
             note(name:b octave:4 sharp:false duration:4.0 instrument:none)]]
    in
@@ -218,8 +218,8 @@ define
       E = [silence(duration:1.0) silence(duration:1.0)]
       % on  mute à l'intérieur d'une transformation duration
       P4 = [duration(second:2.0 partition:[a mute(amount:2)])]
-      E4 = [note(name:a octave:4 sharp:false duration:2.0 instrument:none)
-            silence(duration:2.0) silence(duration:2.0)]
+      E4 = [note(name:a octave:4 sharp:false duration:(2.0/3.0) instrument:none)
+            silence(duration:(2.0/3.0)) silence(duration:(2.0/3.0))]
    in
       {AssertEquals {P2T P1} E1 "TestMute"}
       {AssertEquals {P2T P2} E2 "TestMute"}
