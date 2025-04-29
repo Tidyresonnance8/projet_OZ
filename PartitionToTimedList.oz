@@ -15,7 +15,7 @@ export
 define
     %helpers
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-     
+    declare 
     fun {IsNote Pi}
         case Pi of silence then true
         [] note(...) then true 
@@ -33,6 +33,22 @@ define
             else false end 
         end 
     end
+    %helper pour determiner si les notes d'un accord on toute les meme duree
+
+    /* 
+    fun {ExtendedChordTime Pi}
+        A = {NewCell false}
+        B = {NewCell true}
+        Prev_duration = {NewCell 0}
+        Current_duration = {NewCell 0}
+        proc {ExtendedChordTimeA Pi}
+            {Browse nil}
+        end
+    in 
+        nil
+    end */
+            
+                
 
     %helper pour determiner si une <partition> item est un accord
     fun {IsChord Pi}
@@ -251,7 +267,8 @@ define
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Transformations
-    
+    declare
+    %transpose
     fun {Transpose Semi Partition}
         local P TransposeInter in 
             P = {PartitionToTimedList Partition}
@@ -271,5 +288,123 @@ define
 
     Extended_notesPartition = [Note_1 Note_2 Note_3]
     {Browse {Transpose 100 Extended_notesPartition}} */
+
+    %duration
+    declare
+    fun {Duration Second Partition}
+        TotalDuration = {NewCell 0.0}
+        for I in Partition do
+            if {IsList I} then
+                for Note in I do
+                    TotalDuration := @TotalDuration + Note.duration
+                end
+            else
+                case I of note(duration:D) then
+                    TotalDuration := @TotalDuration + D
+                [] silence(duration:D) then
+                    TotalDuration := @TotalDuration + D
+                [] rest(duration:D) then
+                    TotalDuration := @TotalDuration + D
+                else skip end
+            end
+        end
+        Ratio = if @TotalDuration == 0.0 then 1.0 else Second / @TotalDuration end
+        NouvellePartition = {List.map  Partition fun {$ I} 
+            if {IsList I} then
+                {List.map I fun {$ Note}
+                    note(name:Note.name octave:Note.octave sharp:Note.sharp duration:(Note.durationRatio) instrument:Note.instrument) end}
+            else
+                case I of
+                    note(name:N octave:O sharp:S duration:D instrument:Inst) then
+                        note(name:N octave:O sharp:S duration:(D*Ratio) instrument:Inst)
+                [] silence(duration:D) then
+                        silence(duration:(D*Ratio))
+                [] rest(duration:D) then
+                        rest(duration:(D*Ratio))
+                else I
+                end
+            end
+        end}
+    in
+        NouvellePartition
+    end
+    {Browse {Duration 2.0 [a0 b1 c#2 d#3 e silence]}}
+    {Browse {Duration 2.0 [a0 b1 c#2 d#3 e silence]}}
+
+
+    %stretch
+    declare
+    fun {Stretch Factor Partition}
+        local
+            FlatList
+            Accumulator
+        in
+            FlatList = {PartitionToTimedList Partition}
+            Accumulator = {NewCell nil}
+            for J in FlatList do
+                case J of note(name:N octave:O sharp:S duration:D instrument:I) then
+                    Accumulator := note(name:N octave:O sharp:S duration:D*Factor instrument:I) | @Accumulator
+                [] silence(duration:D) then
+                    Accumulator := silence(duration:D*Factor) | @Accumulator
+                [] rest(duration:D) then
+                    Accumulator := rest(duration:D*Factor) | @Accumulator
+                [] ChordList then
+                    local
+                        NewChordAccumulator
+                    in
+                        NewChordAccumulator = {NewCell nil}
+                        for chord in ChordList do
+                            NewChordAccumulator := note(name:chord.name octave:chord.octave sharp:chord.sharp duration:chord.duration*Factor instrument:chord.instrument) | @NewChordAccumulator
+                        end
+                        Accumulator :=  {List.reverse @NewChordAccumulator} | @Accumulator
+                    end
+                end
+            end
+            {List.reverse @Accumulator}
+        end
+    end
+
+    declare
+    fun {Drone NoteOrChord Amount}
+        fun {ExtendedSound N}
+            case N of note(name:Name octave:Octave sharp:Sharp duration:Duration instrument:Instrument) then
+                [note(name:Name octave:Octave sharp:Sharp duration:Duration instrument:Instrument)]
+            [] silence(duration:D) then
+                [silence(duration:D)]
+            [] rest(duration:D) then
+                [rest(duration:D)]
+            [] ChordList then
+                local
+                    NewChordAccumulator
+                in
+                    NewChordAccumulator = {NewCell nil}
+                    for chord in ChordList do
+                        NewChordAccumulator := note(name:chord.name octave:chord.octave sharp:chord.sharp duration:chord.duration instrument:chord.instrument) | @NewChordAccumulator
+                    end
+                    [{List.reverse @NewChordAccumulator}]
+                end
+            end
+        end
+
+        fun {Repetition N X}
+            if X == 0 then nil
+            else N|{Repetition N X-1}
+            end
+        end
+        SonEtendu = {ExtendedSound NoteOrChord}
+    in 
+        {Repetition SonEtendu Amount}
+    end
+
+    declare
+    fun{Mute Amount}
+        fun {MakeSilences N}
+            if N == 0 then nil
+            else silence(duration:1.0) | {MakeSilences N-1}
+            end
+        end
+    in
+        {MakeSilences Amount}
+    end
 end
 
