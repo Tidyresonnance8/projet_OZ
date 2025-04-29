@@ -343,7 +343,8 @@ define
         NouvellePartition = {List.map  Partition fun {$ I} 
             if {IsList I} then
                 {List.map I fun {$ Note}
-                    note(name:Note.name octave:Note.octave sharp:Note.sharp duration:(Note.durationRatio) instrument:Note.instrument) end}
+                    note(name:Note.name octave:Note.octave sharp:Note.sharp duration:(Note.duration*Ratio) instrument:Note.instrument) 
+                end}
             else
                 case I of
                     note(name:N octave:O sharp:S duration:D instrument:Inst) then
@@ -352,7 +353,8 @@ define
                         silence(duration:(D*Ratio))
                 [] rest(duration:D) then
                         rest(duration:(D*Ratio))
-                else I
+                else 
+                    I
                 end
             end
         end}
@@ -405,7 +407,7 @@ define
                 [silence(duration:D)]
             [] rest(duration:D) then
                 [rest(duration:D)]
-            [] ChordList then
+            /*[] ChordList then
                 local
                     NewChordAccumulator
                 in
@@ -413,8 +415,22 @@ define
                     for chord in ChordList do
                         NewChordAccumulator := note(name:chord.name octave:chord.octave sharp:chord.sharp duration:chord.duration instrument:chord.instrument) | @NewChordAccumulator
                     end
-                    [{List.reverse @NewChordAccumulator}]
+                    [{List.reverse @NewChordAccumulator}]*/
+                %end
+            [] H|_ then
+                if {IsList N} then
+                    local Accumulator in
+                        Accumulator = {NewCell nil}
+                        for Note in N do
+                            Accumulator := note(name:Note.name octave:Note.octave sharp:Note.sharp duration:Note.duration instrument:Note.instrument) | @Accumulator
+                        end
+                        [{List.reverse @Accumulator}]
+                    end
+                else 
+                    [rest(duration:1.0)]
                 end
+            else
+                [rest(duration:1.0)]
             end
         end
 
