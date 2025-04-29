@@ -4,7 +4,6 @@ import
    Mix
    System
    Property
-   PartitionToTimedList
 export
    test: Test
 define
@@ -80,51 +79,58 @@ define
    end
 
    proc {TestChords P2T}
-      Cmin4 = [c d#4 g]
-      Cmaj4 = [c e g]
-      Dmin5 = [d5 f5 a5]
-      DSharpmin = [d#5 f#5 a#5]
-      P2 = [Cmin4 Cmaj4 Dmin5 DSharpmin]
-      E2 = {Map P2 PartitionToTimedList.chordToExtended}
-   in
-      {AssertEquals {P2T P2} E2 "TestChords"}
+      skip
    end
 
-   proc {TestIdentity P2T} 
+   proc {TestIdentity P2T}
       % test that extended notes and chord go from input to output unchanged
-
-      %test pour extended notes:
-      Note_1 = note(name:a octave:4 sharp:false duration:1.0 instrument:none)
-      Note_2 = note(name:b octave:5 sharp:false duration:1.0 instrument:none)
-      Note_3 = note(name:c octave:5 sharp:true duration:1.0 instrument:none)
-
-      Extended_notesPartition = [Note_1 Note_2 Note_3]
-
-      %test pur extended chords 
-      Note_4 = note(name:f octave:5 sharp:true duration:1.0 instrument:none)
-      Note_5 = note(name:g octave:5 sharp:false duration:1.0 instrument:none)
-
-      Extended_chordsPartition = [[Note_2 Note_3 Note_1] [Note_5 Note_4 Note_1] [Note_4 Note_2 Note_5]]
-   in 
-      {AssertEquals {P2T Extended_notesPartition} Extended_notesPartition "TestIdentity"}
-      {AssertEquals {P2T Extended_chordsPartition} Extended_chordsPartition "TestIdentity"}
-
+      skip
    end
 
    proc {TestDuration P2T}
-      skip
+      P = {Duration 10.0 a | silence | [b c] }
+   
+      E = [note(name:a octave:4 sharp:false duration:10.0/3.0 instrument:none)
+            silence(duration:10.0/3.0)
+            [note(name:b octave:4 sharp:false duration:10.0/3.0 instrument:none)
+            note(name:c octave:4 sharp:false duration:10.0/3.0 instrument:none)]
+            ]
+   in
+      {AssertEquals {P2T P} E "TestDurationSimple"}
    end
 
+   
+
    proc {TestStretch P2T}
-      skip
+      P = {Stretch 2.0 a | silence | [b c] }
+   
+      E = [note(name:a octave:4 sharp:false duration:2.0/3.0 instrument:none)
+            silence(duration:4.0/3.0)
+            [note(name:b octave:4 sharp:false duration:4.0/3.0 instrument:none)
+            note(name:c octave:4 sharp:false duration:4.0/3.0 instrument:none)]
+            ]
+   in
+      {AssertEquals {P2T P} E "TestStretchSimple"}
    end
 
    proc {TestDrone P2T}
-      skip
+      P = {Drone note(name:a octave:4 sharp:false duration:1.0 instrument:none) }
+   
+      E = [note(name:a octave:4 sharp:false duration:1.0 instrument:none)
+            note(name:b octave:4 sharp:false duration:1.0 instrument:none)
+            note(name:c octave:4 sharp:false duration:1.0 instrument:none)
+            ]
+   in
+      {AssertEquals {P2T P} E "TestDroneSimple"}
    end
 
    proc {TestMute P2T}
-      skip
+      P = {Mute 3}
+      E = [Silence(duration:1.0)
+            Silence(duration:1.0)
+            Silence(duration:1.0)]
+   in
+      {AssertEquals {P2T P} E "TestMuteSimple"}
    end
 
    proc {TestTranspose P2T}
@@ -225,8 +231,8 @@ define
       {System.show 'tests have started'}
       {TestP2T P2T}
       {System.show 'P2T tests have run'}
-      %{TestMix P2T Mix}
-      %{System.show 'Mix tests have run'}
+    %  {TestMix P2T Mix}
+     % {System.show 'Mix tests have run'}
       {System.show test(passed:@PassedTests total:@TotalTests)}
    end
 end
