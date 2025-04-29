@@ -56,16 +56,10 @@ define
             end 
         end
     in 
-        {ExtendedChordTimeA Pi}
-        if @B == false then false 
-        else true end 
-    end
-    /* 
-    Note_1 = note(name:a octave:4 sharp:false duration:1.0 instrument:none)
-    Note_2 = note(name:b octave:5 sharp:false duration:1.5 instrument:none)
-    Note_3 = note(name:c octave:5 sharp:true duration:1.0 instrument:none)
-    Extended_notesPartition = [Note_1 Note_2 Note_3]
-    {Browse {ExtendedChordTime Extended_notesPartition}}*/
+        nil
+    end 
+            
+                
     %helper pour determiner si une <partition> item est un accord
     fun {IsChord Pi}
         A = {NewCell false}
@@ -130,6 +124,7 @@ define
     end
 
     %Helper pour convertir int > 0 en note equivalent
+
     fun {MapintPos Int}
         case Int of 0 then c#false
         [] 100 then c#true
@@ -295,7 +290,6 @@ define
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Transformations
-
     %transpose
     fun {Transpose Semi Partition}
         local P TransposeInter in 
@@ -391,6 +385,7 @@ define
             {List.reverse @Accumulator}
         end
     end
+    
     %Drone
     fun {Drone NoteOrChord Amount}
         fun {ExtendedSound N}
