@@ -23,6 +23,7 @@ define
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     fun {IsNote Pi}
         case Pi of silence then true
+        [] silence(...) then true
         [] note(...) then true 
         [] H | T then false 
         [] Name#Octave then {Member Name [a b c d e f g]} 
@@ -269,10 +270,6 @@ define
     fun {PartitionToTimedList Partition} 
         %case sur partition pour different cas: <note>|<chord>|<extended note>|<extended chord>|<transformation
         case Partition of nil then nil
-        [] Pi|P andthen {IsNote Pi} == true then {NoteToExtended Pi} | {PartitionToTimedList P}
-        %[] Pi|P andthen {IsNote Pi} == false then {Exception.failure failure(invalidNote:Pi)}|nil --> trouver autre endroit 
-        [] Pi|P andthen {IsChord Pi} == true then {ChordToExtended Pi} | {PartitionToTimedList P}
-        [] Pi|P andthen {IsExtendedChord Pi} == true then Pi | {PartitionToTimedList P}
         %completer pour transformations
         [] duration(second:S partition:SubPartition)|P then
             {Append {PartitionToTimedList {Duration S SubPartition}} {PartitionToTimedList P}}
@@ -284,6 +281,10 @@ define
             {Append {PartitionToTimedList {Drone S A}} {PartitionToTimedList P}}
         [] mute(amount:A)|P then
             {Append {PartitionToTimedList {Mute A}} {PartitionToTimedList P}}
+        [] Pi|P andthen {IsNote Pi} == true then {NoteToExtended Pi} | {PartitionToTimedList P}
+            %[] Pi|P andthen {IsNote Pi} == false then {Exception.failure failure(invalidNote:Pi)}|nil --> trouver autre endroit 
+        [] Pi|P andthen {IsChord Pi} == true then {ChordToExtended Pi} | {PartitionToTimedList P}
+        [] Pi|P andthen {IsExtendedChord Pi} == true then Pi | {PartitionToTimedList P}
         else nil 
         end
     end
@@ -303,6 +304,8 @@ define
                 case ExtendedPart of nil then nil 
                 [] note(name:Note octave:O sharp:Bol duration:D instrument:I)|Pi then
                     {TransposeNote {MapNote Note Bol} O Semi D I}|{TransposeInter Semi Pi}
+                [] silence(...)|Pi then silence(...)|{TransposeInter Semi Pi}
+                %rajoutez cas Ou Pi est un extended_chord 
                 end
             end 
             {TransposeInter Semi P}

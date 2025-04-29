@@ -73,10 +73,21 @@ define
    % TEST PartitionToTimedNotes
 
    proc {TestNotes P2T}
+      %test valid notes
       P1 = [a0 b1 c#2 d#3 e silence]
       E1 = {Map P1 NoteToExtended}
+      P2 = [e6 d5 c#4 g#3 e silence]
+      E2 = {Map P2 NoteToExtended}
+      P3 = [f g a b silence]
+      E3 = {Map P3 NoteToExtended}
+      P4 = [f#5 g#4 a#2 b silence]
+      E4 = {Map P4 NoteToExtended}
    in
       {AssertEquals {P2T P1} E1 "TestNotes"}
+      {AssertEquals {P2T P2} E2 "TestNotes"}
+      {AssertEquals {P2T P3} E3 "TestNotes"}
+      {AssertEquals {P2T P4} E4 "TestNotes"}
+      
    end
 
    proc {TestChords P2T}
@@ -100,14 +111,19 @@ define
 
       Extended_notesPartition = [Note_1 Note_2 Note_3]
 
-      %test pur extended chords 
+      %test pour extended chords 
       Note_4 = note(name:f octave:5 sharp:true duration:1.0 instrument:none)
       Note_5 = note(name:g octave:5 sharp:false duration:1.0 instrument:none)
 
       Extended_chordsPartition = [[Note_2 Note_3 Note_1] [Note_5 Note_4 Note_1] [Note_4 Note_2 Note_5]]
+
+      %test melange 
+
+      ExtendedPartition = [Note_1 [Note_2 Note_3 Note_1] Note_3 [Note_5 Note_4 Note_1] Note_2 [Note_4 Note_2 Note_5] silence(duration:1.0)]
    in 
       {AssertEquals {P2T Extended_notesPartition} Extended_notesPartition "TestIdentity"}
       {AssertEquals {P2T Extended_chordsPartition} Extended_chordsPartition "TestIdentity"}
+      {AssertEquals {P2T ExtendedPartition} ExtendedPartition "TestIdentity"}
 
    end
 
@@ -128,7 +144,22 @@ define
    end
 
    proc {TestTranspose P2T}
-      skip
+      %test pour partition contenue juste de extended_notes et la transposition n'augmente pas l'octave
+      Note_1 = note(name:a octave:4 sharp:false duration:1.0 instrument:none)
+      Note_2 = note(name:g octave:5 sharp:false duration:1.0 instrument:none)
+      Note_3 = note(name:c octave:5 sharp:true duration:1.0 instrument:none)
+      Original_part = [Note_1 Note_2 Note_3]
+      Transp_part1 = {P2T [transpose(semi:200 partition:Original_part)]}
+
+      %Note transpose de 200 semi
+      Note_1_t = note(name:b octave:4 sharp:false duration:1.0 instrument:none)
+      Note_2_t = note(name:a octave:5 sharp:false duration:1.0 instrument:none)
+      Note_3_t = note(name:d octave:5 sharp:true duration:1.0 instrument:none)
+      Transp_part1_check = [Note_1_t Note_2_t Note_3_t]
+   in
+      {AssertEquals Transp_part1 Transp_part1_check "Test_transpose"}
+
+      
    end
 
    proc {TestP2TChaining P2T}
