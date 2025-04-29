@@ -214,6 +214,22 @@ define
         end 
 
     end
+    
+    fun {TransposeChord Pi Semi}
+        /* 
+        Cell = {NewCell nil}
+    in 
+        for Note in Pi do 
+            Cell := {TransposeNote {MapNote Note.name Note.sharp} Note.octave Semi Note.duration Note.instrument}|@Cell
+        end
+        Cell := {Reverse @Cell}
+        @Cell */
+        case Pi of nil then nil
+        [] note(name:Note octave:O sharp:Bol duration:D instrument:I)|P 
+        then {TransposeNote {MapNote Note Bol} O Semi D I}|{TransposeChord P Semi}
+        end 
+    end 
+
     /* 
     local OriginalNote IntNote TranspNote in
         OriginalNote = note(name:a octave:4 sharp:false duration:1.0 instrument:none)
@@ -306,10 +322,11 @@ define
                 [] note(name:Note octave:O sharp:Bol duration:D instrument:I)|Pi then
                     {TransposeNote {MapNote Note Bol} O Semi D I}|{TransposeInter Semi Pi}
                 [] silence(...)|Pi then silence(...)|{TransposeInter Semi Pi}
+                [] L|Pi andthen {IsExtendedChord L} == true then {TransposeChord L Semi}|{TransposeInter Semi Pi}
                 %rajoutez cas Ou Pi est un extended_chord 
                 end
             end 
-            {TransposeInter Semi P}
+            {TransposeInter Semi*100 P}
         end 
     end
     /* 
