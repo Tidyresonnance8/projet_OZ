@@ -15,7 +15,7 @@ export
 define
     %helpers
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    declare 
+    
     fun {IsNote Pi}
         case Pi of silence then true
         [] note(...) then true 
@@ -33,23 +33,33 @@ define
             else false end 
         end 
     end
-    %helper pour determiner si les notes d'un accord on toute les meme duree
 
-    /* 
+    %helper pour determiner si les notes d'un accord on toute les meme duree
     fun {ExtendedChordTime Pi}
         A = {NewCell false}
         B = {NewCell true}
         Prev_duration = {NewCell 0}
-        Current_duration = {NewCell 0}
         proc {ExtendedChordTimeA Pi}
-            {Browse nil}
+            case Pi of nil then A := true
+            [] note(name:N octave:O sharp:Sharp duration:Duration instrument:Instrument)|P then Prev_duration := Duration
+            end 
+
+            for N in Pi do 
+                case N of note(name:N octave:O sharp:Sharp duration:Duration instrument:Instrument) andthen Duration == @Prev_duration then A:= true 
+                else B:= false end  
+            end 
         end
     in 
-        nil
-    end */
-            
-                
-
+        {ExtendedChordTimeA Pi}
+        if @B == false then false 
+        else true end 
+    end
+    /* 
+    Note_1 = note(name:a octave:4 sharp:false duration:1.0 instrument:none)
+    Note_2 = note(name:b octave:5 sharp:false duration:1.5 instrument:none)
+    Note_3 = note(name:c octave:5 sharp:true duration:1.0 instrument:none)
+    Extended_notesPartition = [Note_1 Note_2 Note_3]
+    {Browse {ExtendedChordTime Extended_notesPartition}}*/
     %helper pour determiner si une <partition> item est un accord
     fun {IsChord Pi}
         A = {NewCell false}
@@ -75,7 +85,8 @@ define
         else false end
     end
 
-    %helper pour determiner si une <partition item> est un extended chord 
+    %helper pour determiner si une <partition item> est un extended chord
+ 
     fun {IsExtendedChord Pi}
         A = {NewCell false}
         B = {NewCell true}
@@ -89,7 +100,8 @@ define
         case Pi of note(...) then false
         else 
             {IsExtendedChordA Pi}
-            if {Length Pi} =< 1 then false 
+            if {Length Pi} =< 1 then false
+            elseif {ExtendedChordTime Pi} == false then false
             elseif @B == false then false
             else true end
         end  
@@ -267,7 +279,7 @@ define
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Transformations
-    declare
+
     %transpose
     fun {Transpose Semi Partition}
         local P TransposeInter in 
@@ -290,7 +302,6 @@ define
     {Browse {Transpose 100 Extended_notesPartition}} */
 
     %duration
-    declare
     fun {Duration Second Partition}
         TotalDuration = {NewCell 0.0}
         for I in Partition do
@@ -328,12 +339,11 @@ define
     in
         NouvellePartition
     end
-    {Browse {Duration 2.0 [a0 b1 c#2 d#3 e silence]}}
-    {Browse {Duration 2.0 [a0 b1 c#2 d#3 e silence]}}
+    %{Browse {Duration 2.0 [a0 b1 c#2 d#3 e silence]}}
+    %{Browse {Duration 2.0 [a0 b1 c#2 d#3 e silence]}}
 
 
     %stretch
-    declare
     fun {Stretch Factor Partition}
         local
             FlatList
@@ -364,7 +374,6 @@ define
         end
     end
 
-    declare
     fun {Drone NoteOrChord Amount}
         fun {ExtendedSound N}
             case N of note(name:Name octave:Octave sharp:Sharp duration:Duration instrument:Instrument) then
@@ -396,7 +405,6 @@ define
         {Repetition SonEtendu Amount}
     end
 
-    declare
     fun{Mute Amount}
         fun {MakeSilences N}
             if N == 0 then nil
