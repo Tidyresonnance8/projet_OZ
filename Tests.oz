@@ -61,10 +61,10 @@ define
             note(name:Atom octave:4 sharp:false duration:1.0 instrument:none)
          [] [N O] then
             note(name:{StringToAtom [N]}
-                 octave:{StringToInt [O]}
-                 sharp:false
-                 duration:1.0
-                 instrument: none)
+               octave:{StringToInt [O]}
+               sharp:false
+               duration:1.0
+               instrument: none)
          end
       end
    end
@@ -73,10 +73,21 @@ define
    % TEST PartitionToTimedNotes
 
    proc {TestNotes P2T}
+      %test valid notes
       P1 = [a0 b1 c#2 d#3 e silence]
       E1 = {Map P1 NoteToExtended}
+      P2 = [e6 d5 c#4 g#3 e silence]
+      E2 = {Map P2 NoteToExtended}
+      P3 = [f g a b silence]
+      E3 = {Map P3 NoteToExtended}
+      P4 = [f#5 g#4 a#2 b silence]
+      E4 = {Map P4 NoteToExtended}
    in
       {AssertEquals {P2T P1} E1 "TestNotes"}
+      {AssertEquals {P2T P2} E2 "TestNotes"}
+      {AssertEquals {P2T P3} E3 "TestNotes"}
+      {AssertEquals {P2T P4} E4 "TestNotes"}
+      
    end
 
    proc {TestChords P2T}
@@ -95,40 +106,181 @@ define
 
       %test pour extended notes:
       Note_1 = note(name:a octave:4 sharp:false duration:1.0 instrument:none)
-      Note_2 = note(name:b octave:5 sharp:true duration:1.0 instrument:none)
+      Note_2 = note(name:b octave:5 sharp:false duration:1.0 instrument:none)
       Note_3 = note(name:c octave:5 sharp:true duration:1.0 instrument:none)
 
       Extended_notesPartition = [Note_1 Note_2 Note_3]
 
-      %test pur extended chords 
+      %test pour extended chords 
       Note_4 = note(name:f octave:5 sharp:true duration:1.0 instrument:none)
       Note_5 = note(name:g octave:5 sharp:false duration:1.0 instrument:none)
 
       Extended_chordsPartition = [[Note_2 Note_3 Note_1] [Note_5 Note_4 Note_1] [Note_4 Note_2 Note_5]]
+
+      %test melange 
+
+      ExtendedPartition = [Note_1 [Note_2 Note_3 Note_1] Note_3 [Note_5 Note_4 Note_1] Note_2 [Note_4 Note_2 Note_5] silence(duration:1.0)]
    in 
       {AssertEquals {P2T Extended_notesPartition} Extended_notesPartition "TestIdentity"}
       {AssertEquals {P2T Extended_chordsPartition} Extended_chordsPartition "TestIdentity"}
+      {AssertEquals {P2T ExtendedPartition} ExtendedPartition "TestIdentity"}
 
    end
 
    proc {TestDuration P2T}
-      skip
+      % test de duration sur plusieurs notes
+      P1 = [duration(second:6.0 partition:[a0 b0 c0])]
+      E1 = [note(name:a octave:0 sharp:false duration:2.0 instrument:none)
+            note(name:b octave:0 sharp:false duration:2.0 instrument:none)
+            note(name:c octave:0 sharp:false duration:2.0 instrument:none)]
+      % test de duration sur une note
+      P2 = [duration(second:3.0 partition:[c])]
+      E2 = [note(name:c octave:4 sharp:false duration:3.0 instrument:none)]
+      % test de duration avec silence
+      P3 = [duration(second:2.0 partition:[a4 silence])]
+      E3 = [note(name:a octave:4 sharp:false duration:1.0 instrument:none)
+            silence(duration:1.0)]
+      % test de duration sur un accord
+      P4 = [duration(second:4.0 partition:[[a b]])]
+      E4 = [[note(name:a octave:4 sharp:false duration:4.0 instrument:none)
+            note(name:b octave:4 sharp:false duration:4.0 instrument:none)]]
+   in
+      {AssertEquals {P2T P1} E1 "TestDuration"}
+      {AssertEquals {P2T P2} E2 "TestDuration"}
+      {AssertEquals {P2T P3} E3 "TestDuration"}
+      {AssertEquals {P2T P4} E4 "TestDuration"} 
    end
 
    proc {TestStretch P2T}
-      skip
+      % test de stretch sur deux note
+      P1 = [stretch(factor:3.0 partition:[a0 b0])]
+      E1 = [note(name:a octave:0 sharp:false duration:3.0 instrument:none)
+            note(name:b octave:0 sharp:false duration:3.0 instrument:none)]
+      % test de stretch sur une note
+      P2 = [stretch(factor:2.0 partition:[c])]
+      E2 = [note(name:c octave:4 sharp:false duration:2.0 instrument:none)]
+      % test de stretch sur plusieurs notes déjà prolongées
+      P3 = [stretch(factor:1.5 partition:[note(name:a octave:4 sharp:false duration:1.0 instrument:none) note(name:b octave:4 sharp:false duration:2.0 instrument:none)])]
+      E3 = [note(name:a octave:4 sharp:false duration:1.5 instrument:none)
+            note(name:b octave:4 sharp:false duration:3.0 instrument:none)]
+      % test de stretch sur un accord
+      P4 = [stretch(factor:2.0 partition:[note(name:a octave:4 sharp:false duration:1.0 instrument:none) note(name:b octave:4 sharp:false duration:1.0 instrument:none)])]   
+      E4 = [note(name:a octave:4 sharp:false duration:2.0 instrument:none)
+            note(name:b octave:4 sharp:false duration:2.0 instrument:none)]
+   in
+      {AssertEquals {P2T P1} E1 "TestStretch"}
+      {AssertEquals {P2T P2} E2 "TestStretch"}
+      {AssertEquals {P2T P3} E3 "TestStretch"}
+      {AssertEquals {P2T P4} E4 "TestStretch"}  
    end
 
    proc {TestDrone P2T}
-      skip
+      % test de drone sur une note
+      P1 = [drone(sound:c amount:2)]
+      E1 = [note(name:c octave:4 sharp:false duration:1.0 instrument:none)
+            note(name:c octave:4 sharp:false duration:1.0 instrument:none)]
+      % test de drone avec un silence
+      P2 = [drone(sound:d amount:2) silence(duration:2.0)]
+      E2 = [note(name:d octave:4 sharp:false duration:1.0 instrument:none) note(name:d octave:4 sharp:false duration:1.0 instrument:none)
+            silence(duration:2.0)]
+      % test de drone avec une note dièse
+      P3 = [drone(sound:c#4 amount:2)]
+      E3 = [note(name:c octave:4 sharp:true duration:1.0 instrument:none)
+            note(name:c octave:4 sharp:true duration:1.0 instrument:none)]
+      % test de drone sur drone
+      P4 = [drone(sound:e amount:2) drone(sound:d amount:3)]
+      E4 = [note(name:e octave:4 sharp:false duration:1.0 instrument:none) note(name:e octave:4 sharp:false duration:1.0 instrument:none)
+            note(name:d octave:4 sharp:false duration:1.0 instrument:none) note(name:d octave:4 sharp:false duration:1.0 instrument:none) 
+            note(name:d octave:4 sharp:false duration:1.0 instrument:none)]
+   in
+      {AssertEquals {P2T P1} E1 "TestDrone"}
+      {AssertEquals {P2T P2} E2 "TestDrone"}
+      {AssertEquals {P2T P3} E3 "TestDrone"}
+      {AssertEquals {P2T P4} E4 "TestDrone"}
    end
 
    proc {TestMute P2T}
-      skip
+      % test de mute sur une note
+      P1 = [c mute(amount:1) d]
+      E1 = [note(name:c octave:4 sharp:false duration:1.0 instrument:none)
+            silence(duration:1.0)
+            note(name:d octave:4 sharp:false duration:1.0 instrument:none)]
+      % on mute sur plusieurs notes
+      P2 = [a mute(amount:3) b]
+      E2 = [note(name:a octave:4 sharp:false duration:1.0 instrument:none)
+            silence(duration:1.0)
+            silence(duration:1.0)
+            silence(duration:1.0)
+            note(name:b octave:4 sharp:false duration:1.0 instrument:none)]
+      % on mute seul dans une partition
+      P3 = [mute(amount:2)]
+      E = [silence(duration:1.0) silence(duration:1.0)]
+      % on  mute à l'intérieur d'une transformation duration
+      P4 = [duration(second:2.0 partition:[a mute(amount:2)])]
+      E4 = [note(name:a octave:4 sharp:false duration:(2.0/3.0) instrument:none)
+            silence(duration:(2.0/3.0)) silence(duration:(2.0/3.0))]
+   in
+      {AssertEquals {P2T P1} E1 "TestMute"}
+      {AssertEquals {P2T P2} E2 "TestMute"}
+      {AssertEquals {P2T P3} E "TestMute"}
+      {AssertEquals {P2T P4} E4 "TestMute"}
    end
 
    proc {TestTranspose P2T}
-      skip
+      %test pour partition contenue juste de extended_notes et la transposition n'augmente pas l'octave
+      Note_1 = note(name:a octave:4 sharp:false duration:1.0 instrument:none)
+      Note_2 = note(name:g octave:5 sharp:false duration:1.0 instrument:none)
+      Note_3 = note(name:c octave:5 sharp:true duration:1.0 instrument:none)
+      Original_part = [Note_1 Note_2 Note_3]
+
+      %Note transpose de 200 semi
+      Transp_part1 = {P2T [transpose(semi:2 partition:Original_part)]}
+      Note_1_t = note(name:b octave:4 sharp:false duration:1.0 instrument:none)
+      Note_2_t = note(name:a octave:5 sharp:false duration:1.0 instrument:none)
+      Note_3_t = note(name:d octave:5 sharp:true duration:1.0 instrument:none)
+      Transp_part1_check = [Note_1_t Note_2_t Note_3_t]
+
+      %Note transpose de -200
+      Transp_part2 = {P2T [transpose(semi:~2 partition:Original_part)]}
+      Note_1_t2 = note(name:g octave:4 sharp:false duration:1.0 instrument:none)
+      Note_2_t2 = note(name:f octave:5 sharp:false duration:1.0 instrument:none)
+      Note_3_t2 = note(name:b octave:4 sharp:false duration:1.0 instrument:none)
+      Transp_part2_check2 = [Note_1_t2 Note_2_t2 Note_3_t2]
+
+      %test pour voir si toute les notes possibles son transpose d'une octave vers le haut
+      Transp_part3 = {P2T [transpose(semi:12 partition:[c c#4 d d#4 e f f#4 g g#4 a a#4 b])]}
+      Transp_part3_check3 = [note(name:c octave:5 sharp:false duration:1.0 instrument:none) 
+      note(name:c octave:5 sharp:true duration:1.0 instrument:none) note(name:d octave:5 sharp:false duration:1.0 instrument:none)
+      note(name:d octave:5 sharp:true duration:1.0 instrument:none) note(name:e octave:5 sharp:false duration:1.0 instrument:none)
+      note(name:f octave:5 sharp:false duration:1.0 instrument:none) note(name:f octave:5 sharp:true duration:1.0 instrument:none)
+      note(name:g octave:5 sharp:false duration:1.0 instrument:none) note(name:g octave:5 sharp:true duration:1.0 instrument:none)
+      note(name:a octave:5 sharp:false duration:1.0 instrument:none) note(name:a octave:5 sharp:true duration:1.0 instrument:none) note(name:b octave:5 sharp:false duration:1.0 instrument:none)]
+
+      %test pour voir si toute les notes possibles son transpose de 4 octave vers le haut
+      Transp_part4 = {P2T [transpose(semi:48 partition:[c c#4 d d#4 e f f#4 g g#4 a a#4 b])]}
+      Transp_part4_check4 = [note(name:c octave:8 sharp:false duration:1.0 instrument:none) 
+      note(name:c octave:8 sharp:true duration:1.0 instrument:none) note(name:d octave:8 sharp:false duration:1.0 instrument:none)
+      note(name:d octave:8 sharp:true duration:1.0 instrument:none) note(name:e octave:8 sharp:false duration:1.0 instrument:none)
+      note(name:f octave:8 sharp:false duration:1.0 instrument:none) note(name:f octave:8 sharp:true duration:1.0 instrument:none)
+      note(name:g octave:8 sharp:false duration:1.0 instrument:none) note(name:g octave:8 sharp:true duration:1.0 instrument:none)
+      note(name:a octave:8 sharp:false duration:1.0 instrument:none) note(name:a octave:8 sharp:true duration:1.0 instrument:none) 
+      note(name:b octave:8 sharp:false duration:1.0 instrument:none)]
+
+      %test tranpose sur partition d'un accord simple
+      Transp_part5 = {P2T [transpose(semi:2 partition:[[note(name:c octave:4 sharp:false duration:1.0 instrument:none) 
+      note(name:d octave:4 sharp:true duration:1.0 instrument:none) note(name:g octave:4 sharp:false duration:1.0 instrument:none)]])]} %-->jsp pk ca prend plein de temps 
+      Transp_part5_check5 = [[note(name:d octave:4 sharp:false duration:1.0 instrument:none) 
+      note(name:f octave:4 sharp:false duration:1.0 instrument:none) 
+      note(name:a octave:4 sharp:false duration:1.0 instrument:none)]]
+
+   in
+      {AssertEquals Transp_part1 Transp_part1_check "Test_transpose"}
+      {AssertEquals Transp_part2 Transp_part2_check2 "Test_transpose"}
+      {AssertEquals Transp_part3 Transp_part3_check3 "Test_transpose"}
+      {AssertEquals Transp_part4 Transp_part4_check4 "Test_transpose"}
+      {AssertEquals Transp_part5 Transp_part5_check5 "Test_transpose"}
+
+      
    end
 
    proc {TestP2TChaining P2T}
@@ -143,10 +295,10 @@ define
       {TestNotes P2T}
       {TestChords P2T}
       {TestIdentity P2T}
-      {TestDuration P2T}
-      {TestStretch P2T}
-      {TestDrone P2T}
-      {TestMute P2T}
+      {TestDuration P2T} %--> ne fonctionne pas (erreur d'assert)
+      {TestStretch P2T} %--> fonctionne !
+      {TestDrone P2T} %ne fonctionne pas (erreur fatal (illega field c . 1 = _<optimized>))
+      {TestMute P2T} 
       {TestTranspose P2T}
       {TestP2TChaining P2T}
       {TestEmptyChords P2T}   
