@@ -149,15 +149,25 @@ define
       Note_2 = note(name:g octave:5 sharp:false duration:1.0 instrument:none)
       Note_3 = note(name:c octave:5 sharp:true duration:1.0 instrument:none)
       Original_part = [Note_1 Note_2 Note_3]
-      Transp_part1 = {P2T [transpose(semi:200 partition:Original_part)]}
 
       %Note transpose de 200 semi
+      Transp_part1 = {P2T [transpose(semi:200 partition:Original_part)]}
       Note_1_t = note(name:b octave:4 sharp:false duration:1.0 instrument:none)
       Note_2_t = note(name:a octave:5 sharp:false duration:1.0 instrument:none)
       Note_3_t = note(name:d octave:5 sharp:true duration:1.0 instrument:none)
       Transp_part1_check = [Note_1_t Note_2_t Note_3_t]
+
+      %Note transpose de -200
+      Transp_part2 = {P2T [transpose(semi:~200 partition:Original_part)]}
+      Note_1_t2 = note(name:g octave:4 sharp:false duration:1.0 instrument:none)
+      Note_2_t2 = note(name:f octave:5 sharp:false duration:1.0 instrument:none)
+      Note_3_t2 = note(name:b octave:4 sharp:false duration:1.0 instrument:none)
+      Transp_part1_check2 = [Note_1_t2 Note_2_t2 Note_3_t2]
+
+      %test pour voir si toute les notes possibles son transpose de 300 semi vers le haut
    in
       {AssertEquals Transp_part1 Transp_part1_check "Test_transpose"}
+      {AssertEquals Transp_part2 Transp_part1_check2 "Test_transpose"}
 
       
    end
