@@ -15,7 +15,7 @@ define
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %helpers (meme helpers que dans PartitionToTimedList)
-
+   declare
    fun {IsNote Pi}
       case Pi of silence then true
       [] silence(...) then true
@@ -624,15 +624,15 @@ define
    end
 
 
-
+   declare
    %test rapide mix 
    %{Browse {Length {Mix PartitionToTimedList [partition([a])]}}}
    
    % fonction à appliquer sur cut
    %permet de rétirer un échantillon de la liste
-   fun {RetireSamples N L}
+   fun {DropSamples N L}
       if N =< 0 then L
-      else {RetireSamples (N-1) {List.tail L}}
+      else {DropSamples (N-1) {List.tail L}}
       end
    end
    %permet de prendre un échantillon
@@ -654,7 +654,28 @@ define
       else case L1 of H|T then H|{Append T L2} end
       end
    end */
-
+   % permet de faire la longueur de la liste
+   fun {Length L}
+      if L == nil then 0
+      else case L of H|T then 1 + {Length T} end
+      end
+   end
+   %permet de calculer la multiplication entre de listes
+   fun {MultList L1 L2}
+      case L1#L2 of nil#nil then nil 
+      [] (H1|T1)#(H2|T2) then (H1*H2)|{MultList T1 T2} end
+   end 
+   %contruire une liste de n éléments
+   fun {Build N F}
+      fun {Aux I}
+         if I >= N then nil
+         else {F I}|{Aux (I+1)}
+         end
+      end
+   in
+      {Aux 0}
+   end
+   
 
    
    fun {Repeat N  Music}
@@ -663,15 +684,15 @@ define
       end
    end
 
-   
+   declare
    fun {Cut Start Finish Music P2T}
       local
          Debut = {FloatToInt (Start * 44100.0)}
          Fin = {FloatToInt (Finish * 44100.0)}
          LesEchantillons = {Mix P2T Music}
-         ApresDebut = {RetireSamples Debut LesEchantillons}
+         ApresDebut = {DropSamples Debut LesEchantillons}
          Echantillon = {TakeSamples (Fin - Debut) ApresDebut}
-         Manque = (Fin - Debut) - {List.length Echantillon}
+         Manque = (Fin - Debut) - {Length Echantillon}
          Silence = {Zero Manque}
       in
          if Manque =< 0 then Echantillon
@@ -685,8 +706,8 @@ define
       case Samples of H|T then (H * Factor)|{Facteur T Factor} end
    end
 
-   /* 
-   fun {Echo Delay Decay Repeat Music}
+   declare
+   fun {Echo Delay Decay Repeat Music P2T}
       local 
          DelaySamples
          OriginalMusic
@@ -708,9 +729,41 @@ define
       end
    end
 
-   fun {Fade Start Finish Music}
-      Original_part = {Mix P2T Music}
-      Debut = {FloatToInt (Start * 44100.0)}
-      Fin = {FloatToInt (Finish * 44100.0)}*/
-
+   declare
+   fun {Fade Start Finish Music P2T}
+      local
+         FadeOutApplied
+         FadeInApplied
+         FadeInFactors
+         FadeOutFactors
+         FadeInPart
+         Rest
+         MiddlePart
+         FadeOutPart
+         Samples
+         Longueur
+         Debut
+         Fin
+      in
+         Debut = {FloatToInt (Start * 44100.0)}
+         Fin   = {FloatToInt (Finish * 44100.0)}
+         Samples = {Mix P2T Music}
+         Longueur = {Length Samples}
+         if Longueur < Debut + Fin then
+            Samples
+         else
+            FadeInFactors = {Build Debut fun {$ I} {IntToFloat I} / {IntToFloat Debut}
+               end}
+            FadeOutFactors = {Build Fin fun {$ I} 1.0 - ({IntToFloat I} / {IntToFloat Fin})
+               end}
+            FadeInPart = {TakeSamples Samples Debut}
+            Rest     = {DropSamples Samples Debut}
+            MiddlePart = {TakeSamples Rest (Longueur - Debut - Fin)}
+            FadeOutPart= {DropSamples Rest (Longueur - Debut - Fin)}
+            FadeInApplied  = {MultList FadeInPart FadeInFactors}
+            FadeOutApplied = {MultList FadeOutPart FadeOutFactors}
+            {Append FadeInApplied {Append MiddlePart FadeOutApplied}}
+         end
+      end
+   end
 end
