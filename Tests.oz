@@ -97,6 +97,11 @@ define
       DSharpmin = [d#5 f#5 a#5]
       P2 = [Cmin4 Cmaj4 Dmin5 DSharpmin]
       E2 = {Map P2 PartitionToTimedList.chordToExtended}
+
+      %Accord de note avec duree different 
+      P3 = [[note(name:a octave:4 sharp:false duration:1.0 instrument:none) 
+      note(name:b octave:5 sharp:false duration:2.0 instrument:none) 
+      note(name:c octave:5 sharp:true duration:3.0 instrument:none)]]
    in
       {AssertEquals {P2T P2} E2 "TestChords"}
    end
@@ -315,8 +320,18 @@ define
       {AssertEquals {Mix P2T M1} E1 'TestSamples: simple'}
    end
    
-   proc {TestPartition P2T Mix}
-      skip
+   proc {TestPartition P2T MixArg}
+      %Test 1
+      P1 = [a]
+      Check1 = {Normalize {(Mix.echsPartition) [a] P2T}}
+      M1 = [partition(P1)]
+      Mixed1 = {Normalize {MixArg P2T M1}}
+
+      %Test 2 +longue partition 
+
+      
+   in 
+      {AssertEquals Mixed1 Check1 'TestSamples: simple'}
    end
    
    proc {TestWave P2T Mix}
@@ -377,8 +392,8 @@ define
       {System.show 'tests have started'}
       {TestP2T P2T}
       {System.show 'P2T tests have run'}
-      %{TestMix P2T Mix}
-      %{System.show 'Mix tests have run'}
+      {TestMix P2T Mix}
+      {System.show 'Mix tests have run'}
       {System.show test(passed:@PassedTests total:@TotalTests)}
    end
 end

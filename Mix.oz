@@ -5,9 +5,10 @@ import
    OS
    System
    Property
-   PartitionToTimedList
 export 
    mix: Mix
+   echsPartition: ECHSPartition
+
 define
    % Get the full path of the program
    CWD = {Atom.toString {OS.getCWD}}#"/"
@@ -601,10 +602,10 @@ define
       end 
    end
    %test 
-   {Browse {ECHSPartition [a] PartitionToTimedList}} 
+   %{Browse {ECHSPartition [a] PartitionToTimedList}} 
          
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   declare
+   
    fun {Mix P2T Music}
       % TODO
       %{Project2025.readFile CWD#'wave/animals/cow.wav'}
@@ -622,6 +623,6 @@ define
       else nil end 
    end
    %test rapide mix 
-   {Browse {Length {Mix PartitionToTimedList [partition([a])]}}}
+   %{Browse {Length {Mix PartitionToTimedList [partition([a])]}}}
 
 end
