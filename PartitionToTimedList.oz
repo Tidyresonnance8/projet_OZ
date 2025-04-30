@@ -25,7 +25,7 @@ export
 define
     %helpers
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
+     
     fun {IsNote Pi}
         case Pi of silence then true
         [] silence(...) then true
@@ -304,7 +304,6 @@ define
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    declare
     fun {PartitionToTimedList Partition} 
         %case sur partition pour different cas: <note>|<chord>|<extended note>|<extended chord>|<transformation
         case Partition of nil then nil
