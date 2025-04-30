@@ -12,6 +12,10 @@ export
     noteToExtended: NoteToExtended
     chordToExtended: ChordToExtended
     partitionToTimedList: PartitionToTimedList
+    mapNote: MapNote
+    mapintPos: MapintPos
+    mapintNeg: MapintNeg
+    transposeNote: TransposeNote
     transpose: Transpose
     duration: Duration
     stretch: Stretch
@@ -22,10 +26,14 @@ define
     %helpers
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <<<<<<< HEAD
+<<<<<<< HEAD
     declare
 =======
     %declare
 >>>>>>> 470e1067a7ea0e48a636fbafe31058e65441a3a1
+=======
+    
+>>>>>>> 545a0e95a224b33bf93b9962b6a36aecbeaf3d07
     fun {IsNote Pi}
         case Pi of silence then true
         [] silence(...) then true
@@ -46,23 +54,26 @@ define
     end
 
     %helper pour determiner si les notes d'un accord on toute les meme duree
+    
     fun {ExtendedChordTime Pi}
         A = {NewCell false}
         B = {NewCell true}
-        Prev_duration = {NewCell 0}
+        Prev_duration = {NewCell 0.0}
         proc {ExtendedChordTimeA Pi}
             case Pi of nil then A := true
             [] note(name:N octave:O sharp:Sharp duration:Duration instrument:Instrument)|P then Prev_duration := Duration
             end 
-
             for N in Pi do 
                 case N of note(name:N octave:O sharp:Sharp duration:Duration instrument:Instrument) andthen Duration == @Prev_duration then A:= true 
                 else B:= false end  
             end 
         end
     in 
-        nil
-    end 
+        {ExtendedChordTimeA Pi}
+        if @B == false then false 
+        else true end 
+    end
+    
             
                 
     
@@ -107,7 +118,7 @@ define
         else 
             {IsExtendedChordA Pi}
             if {Length Pi} =< 1 then false
-            elseif {ExtendedChordTime Pi} == false then false
+            elseif {ExtendedChordTime Pi} == false then false 
             elseif @B == false then false
             else true end
         end  
@@ -312,14 +323,22 @@ define
             {Append {PartitionToTimedList {Mute A}} {PartitionToTimedList P}}
         [] transpose(semi:S partition:SubPartition)|P then
             {Append {PartitionToTimedList {Transpose S SubPartition}} {PartitionToTimedList P}}
-        [] Pi|P andthen {IsNote Pi} == true then {NoteToExtended Pi} | {PartitionToTimedList P}
-            %[] Pi|P andthen {IsNote Pi} == false then {Exception.failure failure(invalidNote:Pi)}|nil --> trouver autre endroit 
+        [] Pi|P andthen {IsNote Pi} == true then {NoteToExtended Pi} | {PartitionToTimedList P} 
         [] Pi|P andthen {IsChord Pi} == true then {ChordToExtended Pi} | {PartitionToTimedList P}
-        [] Pi|P andthen {IsExtendedChord Pi} == true then Pi | {PartitionToTimedList P}
-        else nil 
+        [] Pi|P then 
+            if {IsExtendedChord Pi} == true then Pi | {PartitionToTimedList P}
+            elseif {IsExtendedChord Pi} == false then {Exception.failure failure(invalidChord:Pi)} end 
+        else {Exception.failure failure(invalidArgument:Partition)}
         end
     end
-
+     
+    /* 
+    P3 = [[note(name:a octave:4 sharp:false duration:1.0 instrument:none) 
+      note(name:b octave:5 sharp:false duration:2.0 instrument:none) 
+      note(name:c octave:5 sharp:true duration:1.0 instrument:none)]]
+    {Browse {PartitionToTimedList P3}}
+    {Browse {IsExtendedChord P3.1}}*/
+   
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Transformations
     
