@@ -89,14 +89,10 @@ define
             
         end
     in
-        case Pi of note(...)|P then false 
-        else 
-            {IsChordA Pi}
-            if {Length Pi} == 1 then false
-            %elseif {IsExtendedChord Pi} == false then false  %attention peux causer un bug 
-            elseif @B == false then false
-            else true end
-        end 
+        {IsChordA Pi}
+        if {Length Pi} == 1 then false  
+        elseif @B == false then false
+        else true end
     end
 
     %helper pour determiner si une <partition item> est une extended note 
@@ -312,7 +308,7 @@ define
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    declare
+    
     fun {PartitionToTimedList Partition} 
         %case sur partition pour different cas: <note>|<chord>|<extended note>|<extended chord>|<transformation
         case Partition of nil then nil
@@ -329,12 +325,20 @@ define
             {Append {PartitionToTimedList {Transpose S SubPartition}} {PartitionToTimedList P}}
         [] Pi|P andthen {IsNote Pi} == true then {NoteToExtended Pi} | {PartitionToTimedList P} 
         [] Pi|P andthen {IsChord Pi} == true then {ChordToExtended Pi} | {PartitionToTimedList P}
-        [] Pi|P then
-            if ({IsExtendedChord Pi} == true) then Pi | {PartitionToTimedList P}
-            elseif ({IsExtendedChord Pi} == false) then {Exception.failure failure(invalidChord:Pi)} end 
+        [] Pi|P then 
+            if {IsExtendedChord Pi} == true then Pi | {PartitionToTimedList P}
+            elseif {IsExtendedChord Pi} == false then {Exception.failure failure(invalidChord:Pi)} end 
         else {Exception.failure failure(invalidArgument:Partition)}
         end
     end
+     
+    /* 
+    P3 = [[note(name:a octave:4 sharp:false duration:1.0 instrument:none) 
+      note(name:b octave:5 sharp:false duration:2.0 instrument:none) 
+      note(name:c octave:5 sharp:true duration:1.0 instrument:none)]]
+    {Browse {PartitionToTimedList P3}}
+    {Browse {IsExtendedChord P3.1}}*/
+   
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Transformations
     
