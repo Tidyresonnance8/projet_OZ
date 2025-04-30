@@ -21,7 +21,7 @@ export
 define
     %helpers
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
+    declare
     fun {IsNote Pi}
         case Pi of silence then true
         [] silence(...) then true
@@ -245,7 +245,7 @@ define
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
+    declare
     % Translate a note to the extended notation.
     fun {NoteToExtended Note}
         case Note
@@ -416,7 +416,7 @@ define
     
     
     %Drone
-    fun {Drone NoteOrChord Amount}
+    /*fun {Drone NoteOrChord Amount}
         fun {ExtendedSound N}
             case N of note(name:Name octave:Octave sharp:Sharp duration:Duration instrument:Instrument) then
                 [note(name:Name octave:Octave sharp:Sharp duration:Duration instrument:Instrument)]
@@ -432,7 +432,7 @@ define
                     for chord in ChordList do
                         NewChordAccumulator := note(name:chord.name octave:chord.octave sharp:chord.sharp duration:chord.duration instrument:chord.instrument) | @NewChordAccumulator
                     end
-                    [{List.reverse @NewChordAccumulator}]*/
+                    [{List.reverse @NewChordAccumulator}]
                 %end
             [] H|_ then
                 if {IsList N} then
@@ -459,7 +459,46 @@ define
         SonEtendu = {ExtendedSound NoteOrChord}
     in 
         {Repetition SonEtendu Amount}
+    end*/
+    %Drone
+    declare
+    fun {Drone Sound Amount}
+        % Helper: convert to extended list
+        fun {ExtendedSound X}
+            case X of
+                note(name:N octave:O sharp:S duration:D instrument:I) then
+                    [note(name:N octave:O sharp:S duration:D instrument:I)]
+            [] silence(duration:D) then
+                    [silence(duration:D)]
+            [] Pi|P then  % une liste : accord ou accord étendu
+                if {IsChord X} then
+                    {ChordToExtended X}
+                elseif {IsExtendedChord X} then
+                    X
+                else
+                    nil
+                end
+            else
+                if {IsNote X} then
+                    [{NoteToExtended X}]
+                else
+                    nil
+                end
+            end
+        end
+
+        % Répéter la liste N fois
+        fun {Repl L N}
+            if N == 0 then nil
+            else L | {Repl L N-1} end
+        end
+
+    in
+        {Repl {ExtendedSound Sound} Amount}
     end
+
+
+     
 
     
     %Mute

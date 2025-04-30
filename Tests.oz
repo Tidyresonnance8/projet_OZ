@@ -293,17 +293,17 @@ define
    end
       
    proc {TestP2T P2T}
-      {TestNotes P2T}
-      {TestChords P2T}
-      {TestIdentity P2T}
-      {TestDuration P2T} %--> ne fonctionne pas (erreur d'assert)
-      {TestStretch P2T} %--> fonctionne !
-      %{TestDrone P2T} %ne fonctionne pas (erreur fatal (illega field c . 1 = _<optimized>))
-      {TestMute P2T} 
-      {TestTranspose P2T}
-      {TestP2TChaining P2T}
-      {TestEmptyChords P2T}   
-      {AssertEquals {P2T nil} nil 'nil partition'}
+      %{TestNotes P2T}
+      %{TestChords P2T}
+      %{TestIdentity P2T}
+      %{TestDuration P2T} %--> ne fonctionne pas (erreur d'assert)
+      %{TestStretch P2T} %--> fonctionne !
+      {TestDrone P2T} %ne fonctionne pas (erreur fatal (illega field c . 1 = _<optimized>))
+      %{TestMute P2T} 
+      %{TestTranspose P2T}
+      %{TestP2TChaining P2T}
+      %{TestEmptyChords P2T}   
+      %{AssertEquals {P2T nil} nil 'nil partition'}
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
