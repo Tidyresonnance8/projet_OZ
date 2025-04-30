@@ -15,7 +15,7 @@ define
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %helpers (meme helpers que dans PartitionToTimedList)
-   declare
+   
    fun {IsNote Pi}
       case Pi of silence then true
       [] silence(...) then true
@@ -35,28 +35,31 @@ define
       end 
    end
 
-  %helper pour determiner si les notes d'un accord on toute les meme duree
+   %helper pour determiner si les notes d'un accord on toute les meme duree
+
    fun {ExtendedChordTime Pi}
       A = {NewCell false}
       B = {NewCell true}
-      Prev_duration = {NewCell 0}
+      Prev_duration = {NewCell 0.0}
       proc {ExtendedChordTimeA Pi}
          case Pi of nil then A := true
          [] note(name:N octave:O sharp:Sharp duration:Duration instrument:Instrument)|P then Prev_duration := Duration
          end 
-
          for N in Pi do 
             case N of note(name:N octave:O sharp:Sharp duration:Duration instrument:Instrument) andthen Duration == @Prev_duration then A:= true 
             else B:= false end  
          end 
       end
    in 
-      nil
-   end 
-          
-              
-  
-  %helper pour determiner si une <partition> item est un accord
+      {ExtendedChordTimeA Pi}
+      if @B == false then false 
+      else true end 
+   end
+
+         
+            
+
+%helper pour determiner si une <partition> item est un accord
    fun {IsChord Pi}
       A = {NewCell false}
       B = {NewCell true}
@@ -68,21 +71,25 @@ define
          
       end
    in
-      {IsChordA Pi}
-      if {Length Pi} == 1 then false  
-      elseif @B == false then false
-      else true end
+      case Pi of note(...)|P then false 
+      else 
+         {IsChordA Pi}
+         if {Length Pi} == 1 then false
+         %elseif {IsExtendedChord Pi} == false then false  %attention peux causer un bug 
+         elseif @B == false then false
+         else true end
+      end 
    end
 
-  %helper pour determiner si une <partition item> est une extended note 
+%helper pour determiner si une <partition item> est une extended note 
    fun {IsExtendedNote Pi}
       case Pi of silence(duration:_) then true
       [] note(...) then true 
       else false end
    end
 
-  
-  %helper pour determiner si une <partition item> est un extended chord 
+
+%helper pour determiner si une <partition item> est un extended chord 
    fun {IsExtendedChord Pi}
       A = {NewCell false}
       B = {NewCell true}
@@ -97,13 +104,13 @@ define
       else 
          {IsExtendedChordA Pi}
          if {Length Pi} =< 1 then false
-         elseif {ExtendedChordTime Pi} == false then false
+         elseif {ExtendedChordTime Pi} == false then false 
          elseif @B == false then false
          else true end
       end  
    end
 
-  %helper pour changer la duration d'un accord
+%helper pour changer la duration d'un accord
 
    fun {ChangeDChord EChord Ratio}
       case EChord of nil then nil 
@@ -112,7 +119,7 @@ define
       end 
    end 
 
-  %Helper pour determiner la duration totale d'une Flat partition
+%Helper pour determiner la duration totale d'une Flat partition
 
    fun {TotalDuration Fp}
       fun {TotalDurationA Fp A}
@@ -127,7 +134,7 @@ define
       {TotalDurationA Fp 0.0}
    end
 
-  %Helper pour determiner la duration d'un accord
+%Helper pour determiner la duration d'un accord
 
    fun {TotalDurationChord EChord}
       case EChord of nil then 0.0 
@@ -135,8 +142,8 @@ define
       end 
    end
 
-  %Helper pour convertir une note en int equivalent
-  
+%Helper pour convertir une note en int equivalent
+
    fun {MapNote Note Sharp}
       case Note#Sharp of c#false then 0
       [] c#true then 100
@@ -153,8 +160,8 @@ define
       end
    end
 
-  %Helper pour convertir int > 0 en note equivalent
-  
+%Helper pour convertir int > 0 en note equivalent
+
    fun {MapintPos Int}
       case Int of 0 then c#false
       [] 100 then c#true
@@ -171,7 +178,7 @@ define
       end 
    end
 
-  %Helper pour convertir int <= 0 en note equivalent
+%Helper pour convertir int <= 0 en note equivalent
    
    fun {MapintNeg Int}
       case Int of 0 then c#false
@@ -190,26 +197,26 @@ define
       end 
    end
 
-  %helper pour determiner le nb d'octave a augmenter (HowManyOUp)
+%helper pour determiner le nb d'octave a augmenter (HowManyOUp)
 
    fun {HowManyOUp Transposednote}
       fun {HowManyOA Transposednote A}
-            if (Transposednote < 1200) then A
-            else {HowManyOA Transposednote-1200 A+1}
-            end 
+         if (Transposednote < 1200) then A
+         else {HowManyOA Transposednote-1200 A+1}
+         end 
       end 
    in 
       {HowManyOA Transposednote 0}
    end
 
-  %helper pour determiner le nb d'octave a diminuer (HowManyODown)
-  % Note tjr compris entre 0 et 1100
-  % Semi < 0
+%helper pour determiner le nb d'octave a diminuer (HowManyODown)
+% Note tjr compris entre 0 et 1100
+% Semi < 0
    fun {HowManyODown Note Semi}
       fun {HowManyODA Note CurrentSemi A}
-            if (Note + CurrentSemi < 0) then {HowManyODA Note CurrentSemi+1200 A+1}
-            else A
-            end 
+         if (Note + CurrentSemi < 0) then {HowManyODA Note CurrentSemi+1200 A+1}
+         else A
+         end 
       end 
    in 
       %cas ou -semi > 0 et -semi <= 1100
@@ -219,7 +226,7 @@ define
       end 
    end
 
-   %helper pour transpose note en int_equivalent en note(...)
+%helper pour transpose note en int_equivalent en note(...)
 
    fun {TransposeNote Nint Octave Semi Duration Instrument}
       New_note = (Nint + Semi) mod 1200
@@ -228,15 +235,15 @@ define
       New_octave_Up = Octave + Octave_Up
       New_octave_Down = {Abs Octave - Octave_Down}
 
-   in  %rajoutez case si semi < 0 (deja implementer pour semi >= 0)
+   in  
       case Semi >= 0 of true then 
-            case {MapintPos New_note} of N#Sharp then  
-               note(name:N octave:New_octave_Up sharp:Sharp duration:Duration instrument:Instrument)
-            end
+         case {MapintPos New_note} of N#Sharp then  
+            note(name:N octave:New_octave_Up sharp:Sharp duration:Duration instrument:Instrument)
+         end
       else
-            case {MapintNeg New_note} of N#Sharp then  
-               note(name:N octave:New_octave_Down sharp:Sharp duration:Duration instrument:Instrument)
-            end
+         case {MapintNeg New_note} of N#Sharp then  
+            note(name:N octave:New_octave_Down sharp:Sharp duration:Duration instrument:Instrument)
+         end
       end 
 
    end
@@ -624,7 +631,7 @@ define
    end
 
 
-   declare
+   
    %test rapide mix 
    %{Browse {Length {Mix PartitionToTimedList [partition([a])]}}}
    
@@ -647,19 +654,7 @@ define
       else 0.0|{Zero (N-1)}
       end
    end
-   %permet de faire un append entre deux listes
-   /* 
-   fun {Append L1 L2}
-      if L1 == nil then L2
-      else case L1 of H|T then H|{Append T L2} end
-      end
-   end */
-   % permet de faire la longueur de la liste
-   fun {Length L}
-      if L == nil then 0
-      else case L of H|T then 1 + {Length T} end
-      end
-   end
+   
    %permet de calculer la multiplication entre de listes
    fun {MultList L1 L2}
       case L1#L2 of nil#nil then nil 
@@ -684,7 +679,7 @@ define
       end
    end
 
-   declare
+   
    fun {Cut Start Finish Music P2T}
       local
          Debut = {FloatToInt (Start * 44100.0)}
@@ -706,7 +701,7 @@ define
       case Samples of H|T then (H * Factor)|{Facteur T Factor} end
    end
 
-   declare
+   /* 
    fun {Echo Delay Decay Repeat Music P2T}
       local 
          DelaySamples
@@ -727,9 +722,9 @@ define
          end
          {Merge EchoSamples}
       end
-   end
+   end */
 
-   declare
+   
    fun {Fade Start Finish Music P2T}
       local
          FadeOutApplied
@@ -766,4 +761,5 @@ define
          end
       end
    end
+   
 end
