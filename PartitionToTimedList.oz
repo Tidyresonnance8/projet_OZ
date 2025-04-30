@@ -12,6 +12,10 @@ export
     noteToExtended: NoteToExtended
     chordToExtended: ChordToExtended
     partitionToTimedList: PartitionToTimedList
+    mapNote: MapNote
+    mapintPos: MapintPos
+    mapintNeg: MapintNeg
+    transposeNote: TransposeNote
     transpose: Transpose
     duration: Duration
     stretch: Stretch
