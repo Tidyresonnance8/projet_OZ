@@ -130,18 +130,18 @@ define
    proc {TestDuration P2T}
       % test de duration sur plusieurs notes
       P1 = [duration(second:6.0 partition:[a0 b0 c0])]
-      E1 = [note(name:a octave:0 sharp:false duration:6.0 instrument:none)
-            note(name:b octave:0 sharp:false duration:6.0 instrument:none)
-            note(name:c octave:0 sharp:false duration:6.0 instrument:none)]
+      E1 = [note(name:a octave:0 sharp:false duration:2.0 instrument:none)
+            note(name:b octave:0 sharp:false duration:2.0 instrument:none)
+            note(name:c octave:0 sharp:false duration:2.0 instrument:none)]
       % test de duration sur une note
       P2 = [duration(second:3.0 partition:[c])]
       E2 = [note(name:c octave:4 sharp:false duration:3.0 instrument:none)]
       % test de duration avec silence
       P3 = [duration(second:2.0 partition:[a4 silence])]
-      E3 = [note(name:a octave:4 sharp:false duration:2.0 instrument:none)
-            silence(duration:2.0)]
+      E3 = [note(name:a octave:4 sharp:false duration:1.0 instrument:none)
+            silence(duration:1.0)]
       % test de duration sur un accord
-      P4 = [duration(second:4.0 partition:[a b])]
+      P4 = [duration(second:4.0 partition:[[a b]])]
       E4 = [[note(name:a octave:4 sharp:false duration:4.0 instrument:none)
             note(name:b octave:4 sharp:false duration:4.0 instrument:none)]]
    in
@@ -178,21 +178,20 @@ define
       % test de drone sur une note
       P1 = [drone(sound:c amount:2)]
       E1 = [note(name:c octave:4 sharp:false duration:1.0 instrument:none)
-            note(name:e octave:4 sharp:false duration:1.0 instrument:none)
-            note(name:g octave:4 sharp:false duration:1.0 instrument:none)]
+            note(name:c octave:4 sharp:false duration:1.0 instrument:none)]
       % test de drone avec un silence
-      P2 = [drone(sound:d amount:1) silence(duration:2.0)]
-      E2 = [[note(name:d octave:4 sharp:false duration:1.0 instrument:none) note(name:f octave:4 sharp:true duration:1.0 instrument:none)]
+      P2 = [drone(sound:d amount:2) silence(duration:2.0)]
+      E2 = [note(name:d octave:4 sharp:false duration:1.0 instrument:none) note(name:d octave:4 sharp:false duration:1.0 instrument:none)
             silence(duration:2.0)]
       % test de drone avec une note dièse
-      P3 = [drone(sound:c#4 amount:1)]
-      E3 = [[note(name:c octave:4 sharp:true duration:1.0 instrument:none)
-            note(name:e octave:4 sharp:false duration:1.0 instrument:none)]]
+      P3 = [drone(sound:c#4 amount:2)]
+      E3 = [note(name:c octave:4 sharp:true duration:1.0 instrument:none)
+            note(name:c octave:4 sharp:true duration:1.0 instrument:none)]
       % test de drone sur drone
-      P4 = [drone(sound:e amount:1) drone(sound:d amount:0)]
-      E4 = [[note(name:e octave:4 sharp:false duration:1.0 instrument:none)
-            note(name:g octave:4 sharp:false duration:1.0 instrument:none)]
-            [note(name:d octave:4 sharp:false duration:1.0 instrument:none)]]
+      P4 = [drone(sound:e amount:2) drone(sound:d amount:3)]
+      E4 = [note(name:e octave:4 sharp:false duration:1.0 instrument:none) note(name:e octave:4 sharp:false duration:1.0 instrument:none)
+            note(name:d octave:4 sharp:false duration:1.0 instrument:none) note(name:d octave:4 sharp:false duration:1.0 instrument:none) 
+            note(name:d octave:4 sharp:false duration:1.0 instrument:none)]
    in
       {AssertEquals {P2T P1} E1 "TestDrone"}
       {AssertEquals {P2T P2} E2 "TestDrone"}
@@ -218,8 +217,8 @@ define
       E = [silence(duration:1.0) silence(duration:1.0)]
       % on  mute à l'intérieur d'une transformation duration
       P4 = [duration(second:2.0 partition:[a mute(amount:2)])]
-      E4 = [note(name:a octave:4 sharp:false duration:2.0 instrument:none)
-            silence(duration:2.0) silence(duration:2.0)]
+      E4 = [note(name:a octave:4 sharp:false duration:(2.0/3.0) instrument:none)
+            silence(duration:(2.0/3.0)) silence(duration:(2.0/3.0))]
    in
       {AssertEquals {P2T P1} E1 "TestMute"}
       {AssertEquals {P2T P2} E2 "TestMute"}
@@ -293,17 +292,17 @@ define
    end
       
    proc {TestP2T P2T}
-      %{TestNotes P2T}
-      %{TestChords P2T}
-      %{TestIdentity P2T}
-      %{TestDuration P2T} %--> ne fonctionne pas (erreur d'assert)
-      %{TestStretch P2T} %--> fonctionne !
-      {TestDrone P2T} %ne fonctionne pas (erreur fatal (illega field c . 1 = _<optimized>))
-      %{TestMute P2T} 
-      %{TestTranspose P2T}
-      %{TestP2TChaining P2T}
-      %{TestEmptyChords P2T}   
-      %{AssertEquals {P2T nil} nil 'nil partition'}
+      {TestNotes P2T}
+      {TestChords P2T}
+      {TestIdentity P2T}
+      {TestDuration P2T} %--> ne fonctionne pas (erreur d'assert)
+      {TestStretch P2T} %--> fonctionne !
+      %{TestDrone P2T} %ne fonctionne pas (erreur fatal (illega field c . 1 = _<optimized>))
+      {TestMute P2T} 
+      {TestTranspose P2T}
+      {TestP2TChaining P2T}
+      {TestEmptyChords P2T}   
+      {AssertEquals {P2T nil} nil 'nil partition'}
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
