@@ -444,40 +444,40 @@ define
 
    % Translate chord to the extended notation
    fun {ChordToExtended Chord}
-         A = {NewCell nil}
+      A = {NewCell nil}
    in 
-         if {IsChord Chord} then
-            for Notes in Chord do 
-               A := {NoteToExtended Notes}|@A
-            end
-            A := {Reverse @A}
-            @A
-         elseif Chord == nil then nil  
-         else {Exception.failure failure(invalidChord:Chord)} end
+      if {IsChord Chord} then
+         for Notes in Chord do 
+            A := {NoteToExtended Notes}|@A
+         end
+         A := {Reverse @A}
+         @A
+      elseif Chord == nil then nil  
+      else {Exception.failure failure(invalidChord:Chord)} end
    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
    fun {PartitionToTimedList Partition} 
-         %case sur partition pour different cas: <note>|<chord>|<extended note>|<extended chord>|<transformation
-         case Partition of nil then nil
-         %completer pour transformations
-         [] duration(second:S partition:SubPartition)|P then
-            {Append {PartitionToTimedList {Duration S SubPartition}} {PartitionToTimedList P}}
-         [] stretch(factor:F partition:SubPartition)|P then
-            {Append {PartitionToTimedList {Stretch F SubPartition}} {PartitionToTimedList P}}
-         [] drone(sound:S amount:A)|P then
-            {Append {PartitionToTimedList {Drone S A}} {PartitionToTimedList P}}
-         [] mute(amount:A)|P then
-            {Append {PartitionToTimedList {Mute A}} {PartitionToTimedList P}}
-         [] transpose(semi:S partition:SubPartition)|P then
-            {Append {PartitionToTimedList {Transpose S SubPartition}} {PartitionToTimedList P}}
-         [] Pi|P andthen {IsNote Pi} == true then {NoteToExtended Pi} | {PartitionToTimedList P}
-            %[] Pi|P andthen {IsNote Pi} == false then {Exception.failure failure(invalidNote:Pi)}|nil --> trouver autre endroit 
-         [] Pi|P andthen {IsChord Pi} == true then {ChordToExtended Pi} | {PartitionToTimedList P}
-         [] Pi|P andthen {IsExtendedChord Pi} == true then Pi | {PartitionToTimedList P}
-         else nil 
-         end
+      %case sur partition pour different cas: <note>|<chord>|<extended note>|<extended chord>|<transformation
+      case Partition of nil then nil
+      %completer pour transformations
+      [] duration(second:S partition:SubPartition)|P then
+         {Append {PartitionToTimedList {Duration S SubPartition}} {PartitionToTimedList P}}
+      [] stretch(factor:F partition:SubPartition)|P then
+         {Append {PartitionToTimedList {Stretch F SubPartition}} {PartitionToTimedList P}}
+      [] drone(sound:S amount:A)|P then
+         {Append {PartitionToTimedList {Drone S A}} {PartitionToTimedList P}}
+      [] mute(amount:A)|P then
+         {Append {PartitionToTimedList {Mute A}} {PartitionToTimedList P}}
+      [] transpose(semi:S partition:SubPartition)|P then
+         {Append {PartitionToTimedList {Transpose S SubPartition}} {PartitionToTimedList P}}
+      [] Pi|P andthen {IsNote Pi} == true then {NoteToExtended Pi} | {PartitionToTimedList P}
+         %[] Pi|P andthen {IsNote Pi} == false then {Exception.failure failure(invalidNote:Pi)}|nil --> trouver autre endroit 
+      [] Pi|P andthen {IsChord Pi} == true then {ChordToExtended Pi} | {PartitionToTimedList P}
+      [] Pi|P andthen {IsExtendedChord Pi} == true then Pi | {PartitionToTimedList P}
+      else nil 
+      end
    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -485,109 +485,109 @@ define
 
    %transpose
    fun {Transpose Semi Partition}
-         local P TransposeInter in 
-            P = {PartitionToTimedList Partition}
-            fun {TransposeInter Semi ExtendedPart}
-               case ExtendedPart of nil then nil 
-               [] note(name:Note octave:O sharp:Bol duration:D instrument:I)|Pi then
-                     {TransposeNote {MapNote Note Bol} O Semi D I}|{TransposeInter Semi Pi}
-               [] silence(...)|Pi then silence(...)|{TransposeInter Semi Pi}
-               [] L|Pi andthen {IsExtendedChord L} == true then {TransposeChord L Semi}|{TransposeInter Semi Pi}
-               %rajoutez cas Ou Pi est un extended_chord 
-               end
-            end 
-            {TransposeInter Semi*100 P}
+      local P TransposeInter in 
+         P = {PartitionToTimedList Partition}
+         fun {TransposeInter Semi ExtendedPart}
+            case ExtendedPart of nil then nil 
+            [] note(name:Note octave:O sharp:Bol duration:D instrument:I)|Pi then
+                  {TransposeNote {MapNote Note Bol} O Semi D I}|{TransposeInter Semi Pi}
+            [] silence(...)|Pi then silence(...)|{TransposeInter Semi Pi}
+            [] L|Pi andthen {IsExtendedChord L} == true then {TransposeChord L Semi}|{TransposeInter Semi Pi}
+            %rajoutez cas Ou Pi est un extended_chord 
+            end
          end 
+         {TransposeInter Semi*100 P}
+      end 
    end
 
    %Duration
 
    fun {Duration Second Partition}
-         local FlatPartition Ratio TD DurationInter in 
-            FlatPartition = {PartitionToTimedList Partition}
-            TD = {TotalDuration FlatPartition}
+      local FlatPartition Ratio TD DurationInter in 
+         FlatPartition = {PartitionToTimedList Partition}
+         TD = {TotalDuration FlatPartition}
 
-            if TD == 0.0 then Ratio = 1.0
-            else Ratio = Second/TD end
+         if TD == 0.0 then Ratio = 1.0
+         else Ratio = Second/TD end
 
-            fun {DurationInter Fp}
-               case Fp of nil then nil 
-               [] silence(duration:D)|P then silence(duration:(D*Ratio))|{DurationInter P}
-               [] note(name:Note octave:O sharp:Bol duration:D instrument:I)|P then 
-                     note(name:Note octave:O sharp:Bol duration:D*Ratio instrument:I)|{DurationInter P}
-               [] L|P andthen {IsExtendedChord L} == true then {ChangeDChord L Ratio}|{DurationInter P}
-               end
-            end 
-            
-            {DurationInter FlatPartition}
-         end
+         fun {DurationInter Fp}
+            case Fp of nil then nil 
+            [] silence(duration:D)|P then silence(duration:(D*Ratio))|{DurationInter P}
+            [] note(name:Note octave:O sharp:Bol duration:D instrument:I)|P then 
+                  note(name:Note octave:O sharp:Bol duration:D*Ratio instrument:I)|{DurationInter P}
+            [] L|P andthen {IsExtendedChord L} == true then {ChangeDChord L Ratio}|{DurationInter P}
+            end
+         end 
+         
+         {DurationInter FlatPartition}
+      end
    end
 
    %stretch
 
    fun {Stretch Factor Partition}
-         local
-            FlatList
-            Accumulator
-         in
-            FlatList = {PartitionToTimedList Partition}
-            Accumulator = {NewCell nil}
-            for J in FlatList do
-               case J of note(name:N octave:O sharp:S duration:D instrument:I) then
-                     Accumulator := note(name:N octave:O sharp:S duration:D*Factor instrument:I) | @Accumulator
-               [] silence(duration:D) then
-                     Accumulator := silence(duration:D*Factor) | @Accumulator
-               [] rest(duration:D) then
-                     Accumulator := rest(duration:D*Factor) | @Accumulator
-               [] ChordList then
-                     local
-                        NewChordAccumulator
-                     in
-                        NewChordAccumulator = {NewCell nil}
-                        for chord in ChordList do
-                           NewChordAccumulator := note(name:chord.name octave:chord.octave sharp:chord.sharp duration:chord.duration*Factor instrument:chord.instrument) | @NewChordAccumulator
-                        end
-                        Accumulator :=  {List.reverse @NewChordAccumulator} | @Accumulator
+      local
+         FlatList
+         Accumulator
+      in
+         FlatList = {PartitionToTimedList Partition}
+         Accumulator = {NewCell nil}
+         for J in FlatList do
+            case J of note(name:N octave:O sharp:S duration:D instrument:I) then
+                  Accumulator := note(name:N octave:O sharp:S duration:D*Factor instrument:I) | @Accumulator
+            [] silence(duration:D) then
+                  Accumulator := silence(duration:D*Factor) | @Accumulator
+            [] rest(duration:D) then
+                  Accumulator := rest(duration:D*Factor) | @Accumulator
+            [] ChordList then
+                  local
+                     NewChordAccumulator
+                  in
+                     NewChordAccumulator = {NewCell nil}
+                     for chord in ChordList do
+                        NewChordAccumulator := note(name:chord.name octave:chord.octave sharp:chord.sharp duration:chord.duration*Factor instrument:chord.instrument) | @NewChordAccumulator
                      end
-               end
+                     Accumulator :=  {List.reverse @NewChordAccumulator} | @Accumulator
+                  end
             end
-            {List.reverse @Accumulator}
          end
+         {List.reverse @Accumulator}
+      end
    end
    
   %Drone
 
   %Amout > 0 
    fun {Drone NoteOrChord Amount}
-         local ExtendedNote ExtendedChord DroneA in  
-            fun {DroneA NoteOrChord A Acc}
-               if A =< 0 then Acc
-               else {DroneA NoteOrChord A-1 NoteOrChord|Acc} end 
-            end
+      local ExtendedNote ExtendedChord DroneA in  
+         fun {DroneA NoteOrChord A Acc}
+            if A =< 0 then Acc
+            else {DroneA NoteOrChord A-1 NoteOrChord|Acc} end 
+         end
 
-            if {IsNote NoteOrChord} == true then 
-               ExtendedNote = {NoteToExtended NoteOrChord}
-               {DroneA ExtendedNote Amount nil}
-            elseif {IsChord NoteOrChord} == true then 
-               ExtendedChord = {ChordToExtended NoteOrChord}
-               {DroneA ExtendedChord Amount nil}
-            elseif {IsExtendedChord NoteOrChord} == true then 
-               ExtendedChord = NoteOrChord
-               {DroneA ExtendedChord Amount nil}
-            else {Exception.failure failure(invalidNoteOrChord:NoteOrChord)} end
-         end 
+         if {IsNote NoteOrChord} == true then 
+            ExtendedNote = {NoteToExtended NoteOrChord}
+            {DroneA ExtendedNote Amount nil}
+         elseif {IsChord NoteOrChord} == true then 
+            ExtendedChord = {ChordToExtended NoteOrChord}
+            {DroneA ExtendedChord Amount nil}
+         elseif {IsExtendedChord NoteOrChord} == true then 
+            ExtendedChord = NoteOrChord
+            {DroneA ExtendedChord Amount nil}
+         else {Exception.failure failure(invalidNoteOrChord:NoteOrChord)} end
+      end 
    end
 
   %Mute
   
    fun{Mute Amount}
-         fun {MakeSilences N}
-            if N == 0 then nil
-            else silence(duration:1.0) | {MakeSilences N-1}
-            end
+      fun {MakeSilences N}
+         if N == 0 then nil
+         else silence(duration:1.0) | {MakeSilences N-1}
          end
+      end
    in
-         {MakeSilences Amount}
+      {MakeSilences Amount}
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -761,5 +761,5 @@ define
          end
       end
    end
-   
+
 end
