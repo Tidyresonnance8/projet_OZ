@@ -775,11 +775,25 @@ define
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %Filtre
-   fun {Repeat N  Music}
-      if N =< 0 then nil
-      else {Append Music {Repeat (N-1) Music}}
-      end
+   declare
+   fun {Repeat N Music P2T}
+      local Samples RepeatRec Res in 
+         Samples = {Mix P2T Music}
+
+         fun {RepeatRec Count S}
+            if Count =< 0 then nil
+            else {Append Samples {RepeatRec (Count-1) Samples}} end 
+         end
+
+         thread Res = {RepeatRec N Samples} end 
+         Res
+      end 
    end
+   {Browse {Repeat 2 [partition([a b])] PartitionToTimedList}}
+
+
+
+   {Browse {Repeat 2 [partition([a b])] PartitionToTimedList}}
 
    
    fun {Cut Start Finish Music P2T}
@@ -799,69 +813,85 @@ define
    end
    
    % permet d'appliquer un facteur à tous les échantillons
-   fun {Facteur Samples Factor}
-      case Samples of H|T then (H * Factor)|{Facteur T Factor} end
+   declare
+   fun {SumAll Lists}
+   
+      fun {SumAux I}
+         
+         {FoldR Lists fun {$ List Acc}{Nth List I} + Acc end 0.0}
+         
+      end
+   in
+      if Lists == nil then nil
+         
+      else {Map {List.number 1 {Length Lists.1} 1} SumAux}
+         
+      end
    end
+   
+
+   /*fun {Echo Delay Decay Repeat Music P2T}
+      local
+         Delayed
+         DecayFactor
+         NewList
+         DelayedList
+         Padded
+         PaddedOriginal
+         Original
+         OriginalLen
+         DelaySample
+         TotalLength
+         AllLists
+      in
+         Original = {Mix P2T Music}
+         OriginalLen = {Length Original}
+         DelaySample = {FloatToInt (Delay * 44100.0 * {IntToFloat Repeat})}
+         TotalLength = OriginalLen + DelaySample 
+         PaddedOriginal = {Append Original {List.make (TotalLength - OriginalLen) 0.0}}
+         AllLists = {NewCell [PaddedOriginal]}
+      
+         for I in 1..Repeat do
+            Delayed = {FloatToInt (Delay * 44100.0 * {IntToFloat I})}
+            DecayFactor = {Pow Decay {IntToFloat I}} 
+            NewList = {Map Original fun {$ X} X * DecayFactor end}
+            DelayedList = {Append {List.make Delayed 0.0} NewList}
+            Padded = {Append DelayedList {List.make (TotalLength - {Length DelayedList}) 0.0}}
+            AllLists := {Append @AllLists [Padded]}
+         end
+         {SumAll @AllLists} 
+      end
+   end
+   {Browse {Echo 0.5 0.5 2 [partition([a b])] PartitionToTimedList}}*/
+        
+   
 
    declare
-   fun {Echo Delay Decay Repeat Music P2T}
-      local 
-         DelaySamples
-         OriginalMusic
-         Decayed
-         Silence
-         EchoI
-         EchoSamples
-      in
-         OriginalMusic = {Mix P2T Music}
-         DelaySamples = {FloatToInt (Delay * 44100.0)}
-         EchoSamples =  [OriginalMusic]
-         for I in 1..Repeat do
-            Decayed = {Facteur OriginalMusic {Pow Decay I}}
-            Silence = {Zero (DelaySamples*I)}
-            EchoI = {Append Silence Decayed}
-            EchoSamples = {Append EchoSamples EchoI}
-         end
-         {Merge EchoSamples P2T}
-      end
-   end 
-
-   
    fun {Fade Start Finish Music P2T}
       local
-         FadeOutApplied
-         FadeInApplied
-         FadeInFactors
-         FadeOutFactors
-         FadeInPart
-         Rest
-         MiddlePart
-         FadeOutPart
-         Samples
-         Longueur
-         Debut
-         Fin
+         Debut = {FloatToInt (Start * 44100.0)}  
+         Fin = {FloatToInt (Finish * 44100.0)}   
+         Samples = {Mix P2T Music}               
+         Longueur = {Length Samples}             
       in
-         Debut = {FloatToInt (Start * 44100.0)}
-         Fin   = {FloatToInt (Finish * 44100.0)}
-         Samples = {Mix P2T Music}
-         Longueur = {Length Samples}
-         if Longueur < Debut + Fin then
-            Samples
+         if Longueur =< (Debut + Fin) then       
+            Samples                              
          else
-            FadeInFactors = {Build Debut fun {$ I} {IntToFloat I} / {IntToFloat Debut}
-               end}
-            FadeOutFactors = {Build Fin fun {$ I} 1.0 - ({IntToFloat I} / {IntToFloat Fin})
-               end}
-            FadeInPart = {TakeSamples Samples Debut}
-            Rest     = {DropSamples Samples Debut}
-            MiddlePart = {TakeSamples Rest (Longueur - Debut - Fin)}
-            FadeOutPart= {DropSamples Rest (Longueur - Debut - Fin)}
-            FadeInApplied  = {MultList FadeInPart FadeInFactors}
-            FadeOutApplied = {MultList FadeOutPart FadeOutFactors}
-            {Append FadeInApplied {Append MiddlePart FadeOutApplied}}
+            FadeInFactors = {Build Debut fun {$ I} {IntToFloat I} / {IntToFloat (Debut - 1)} end}
+            FadeOutFactors = {Build Fin fun {$ I} 1.0 - ({IntToFloat I} / {IntToFloat (Fin - 1)}) end}
+            FadeInPart = {TakeSamples Debut Samples}             
+            Rest = {DropSamples Debut Samples}                   
+            MiddlePart = {TakeSamples (Longueur - Debut - Fin) Rest} 
+            FadeOutPart = {TakeSamples Fin {DropSamples (Longueur - Debut - Fin) Rest}} 
+            FadeInApplied = {MultList FadeInPart FadeInFactors}  
+            FadeOutApplied = {MultList FadeOutPart FadeOutFactors} 
+         in
+            {Append FadeInApplied {Append MiddlePart FadeOutApplied}} 
          end
       end
    end
+   {Browse {Fade 0.5 0.5 [partition([a])] PartitionToTimedList}} 
+   
 
+   
 end
