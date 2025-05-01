@@ -874,7 +874,7 @@ define
          Samples = {Mix P2T Music}               
          Longueur = {Length Samples}             
       in
-         if Longueur =< (Debut + Fin) then       
+         if Longueur < (Debut + Fin) then       
             Samples                              
          else
             FadeInFactors = {Build Debut fun {$ I} {IntToFloat I} / {IntToFloat (Debut - 1)} end}
@@ -890,7 +890,22 @@ define
          end
       end
    end
-   {Browse {Fade 0.5 0.5 [partition([a])] PartitionToTimedList}} 
+
+   
+   declare
+      fun {Ones N}
+         if N == 0 then nil else 1.0|{Ones N-1} end
+      end
+
+      % Test avec 10 samples (durée équivalente: 10/44100 ≈ 0.00022676 sec)
+      Music = [samples({Ones 10})] 
+      Start = 2.0/44100.0 % Fade-in sur 2 samples
+      Finish = 3.0/44100.0 % Fade-out sur 3 samples
+      FadeSamples = {Fade Start Finish Music PartitionToTimedList}
+   in
+      {Browse FadeSamples} 
+   % Résultat attendu : [0.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 0.5 0.0]
+   
    
 
    
