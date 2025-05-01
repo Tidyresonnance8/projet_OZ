@@ -15,7 +15,7 @@ define
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %helpers (meme helpers que dans PartitionToTimedList)
-   declare 
+    
    fun {IsNote Pi}
       case Pi of silence then true
       [] silence(...) then true
@@ -590,7 +590,7 @@ define
    %{Browse {ECHSPartition [a] PartitionToTimedList}} 
          
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   declare
+   
    fun {Mix P2T Music}
       % TODO
       %{Project2025.readFile CWD#'wave/animals/cow.wav'}
@@ -599,17 +599,97 @@ define
       [] samples(Samples)|MusicPart then {Append Samples {Mix P2T MusicPart}}
       [] partition(Partition)|MusicPart then {Append {ECHSPartition Partition P2T} {Mix P2T MusicPart}} 
       [] wave(Filename)|MusicPart then nil
-      [] merge(Musics_W_I)|MusicPart then nil
-      [] loop(seconds:S Music)|MusicPart then nil
+      [] merge(Musics_W_I)|MusicPart then {Append {Merge Musics_W_I P2T} {Mix P2T MusicPart}}
+      [] loop(seconds:S Music)|MusicPart then {Append {Loop S Music P2T} {Mix P2T MusicPart}}
       [] clip(low:Sample_low high:Sample_high Music)|MusicPart then {Append {Clip Sample_low Sample_high P2T Music} {Mix P2T MusicPart}}
       [] echo(delay:D decay:F repeat:N Music)|MusicPart then nil 
       [] fade(start:Start finish:Finish Music)|MusicPart then nil
       [] cut(start:Start finish:Finish )|MusicPart then nil
       else nil end 
    end
-   {Browse {Mix PartitionToTimedList [clip(low:[~1.0] high:[0.4] [partition([a])])]}}
 
-   declare
+   
+
+
+   %%{Browse {Mix PartitionToTimedList [clip(low:[~1.0] high:[1.0] [partition([a])])]}}
+   %{Browse {Length {Mix PartitionToTimedList [merge([0.5#[partition([a b])] 0.6#[partition([a f#5])] 0.7#[partition([a g b])]])]}}}
+   %helper 
+   
+   %helper pour determiner la liste de plus grande taille parmi une Liste de Liste 
+   fun {FindBL ListofList}
+      local Currentbiggest FindBLRec in 
+         Currentbiggest = {NewCell 0}
+         
+         fun {FindBLRec LofL}
+            case LofL of nil then @Currentbiggest
+            [] L1|T andthen {Length L1} > @Currentbiggest then Currentbiggest := {Length L1} {FindBLRec T}
+            [] L1|T andthen {Length L1} =< @Currentbiggest then {FindBLRec T}
+            end 
+         end 
+
+         {FindBLRec ListofList}
+      end 
+   end 
+   %{Browse {FindBL [[1 2] [1 2 3 4] [1 2 3 4]]}}
+
+   %helper pour rajouter du silence au Sample/List ActualList qui on une taille plus petite que BigL
+   fun {AddSilence ActualList BigL}
+      local SilenceLen SilenceList in
+         SilenceLen = BigL - {Length ActualList}
+         SilenceList = {Map {MakeList SilenceLen} fun {$ X} 0.0 end}
+         {Append ActualList SilenceList}
+      end
+   end
+   %{Browse {AddSilence [0.04 0.9 0.3] 5}}
+   
+   %helper qui permet de convertir le format MusicWithIntensities ::= nil | Float#<music> '|' <MusicWithIntensities> 
+   %en format ListOfSamples ::= nil | <sample>|<ListOfSamples>
+   fun {CreateLofLWI MWI P2T}
+      local Res CreateLofLWIRec in 
+         fun {CreateLofLWIRec MTI}
+            case MTI of nil then nil 
+            [] F#M|T then {Map {Mix P2T M} fun{$ X} X*F end}|{CreateLofLWIRec T}
+            end 
+         end 
+
+         thread Res = {CreateLofLWIRec MWI} end 
+         Res 
+      end 
+   end
+   %{Browse {CreateLofLWI [0.5#[partition([a])] 0.6#[partition([a])] 0.7#[partition([a])]] PartitionToTimedList}}
+
+   
+   %ici ListofList est deja convertie en CreateLofLWI
+   %helper qui permet de rajoutez du silence au sample de ListOfList ::= nil | <sample>|<ListOfSamples> qui n'ont pas la meme longueur que les autres samples
+   fun {AddSilenceToLofL ListofList}
+      local Larggest Res AddSilenceToLofLRec in
+         Larggest = {FindBL ListofList}
+
+         fun {AddSilenceToLofLRec LofL}
+            case LofL of nil then nil 
+            [] L1|T andthen {Length L1} < Larggest then {AddSilence L1 Larggest}|{AddSilenceToLofLRec T}
+            [] L1|T andthen {Length L1} == Larggest then L1|{AddSilenceToLofLRec T}
+            end 
+         end 
+
+         thread Res = {AddSilenceToLofLRec ListofList} end 
+         Res 
+      end 
+   end
+   %{Browse {Length (({AddSilenceToLofL {CreateLofLWI [0.5#[partition([a b])] 0.6#[partition([b d c])] 0.6#[partition([b])]] PartitionToTimedList}}))}}
+
+    
+   fun {Merge MWI P2T}
+      local ListofList ResLen Res in
+         ListofList = {AddSilenceToLofL {CreateLofLWI MWI P2T}}
+         ResLen = {FindBL ListofList}
+         Res = {SumLists ListofList ResLen}
+         Res
+      end 
+   end 
+   %{Browse {Merge [0.5#[partition([a])] 0.6#[partition([a])] 0.7#[partition([a])]] PartitionToTimedList}}
+
+   
    fun {Clip Low High P2T Music}
       local Ech Res ClipRec in 
          Ech = {Mix P2T Music}
@@ -631,9 +711,9 @@ define
       end 
    end 
 
-   {Browse {Clip [~1.0] [0.4] PartitionToTimedList [partition([a])]}}
+   %{Browse {Clip [~1.0] [0.4] PartitionToTimedList [partition([a])]}}
 
-   declare 
+    
    fun {Loop D Music P2T}
       local Ech NewLen Res NewList LoopRec in 
          NewLen = {FloatToInt D*44100.0}
@@ -652,17 +732,9 @@ define
          Res 
       end 
    end
-   {Browse {Length {Loop 1.0 [partition([a b])] PartitionToTimedList}}} %Len --> 1.5*44100
-   {Browse {Length {Mix PartitionToTimedList [partition([a b])]}}}
+   %{Browse {Length {Loop 1.0 [partition([a b])] PartitionToTimedList}}} %Len --> 1.5*44100
+   %{Browse {Length {Mix PartitionToTimedList [partition([a b])]}}}
 
-
-
-
-
-
-   
-   %test rapide mix 
-   %{Browse {Length {Mix PartitionToTimedList [partition([a])]}}}
    
    % fonction à appliquer sur cut
    %permet de rétirer un échantillon de la liste
