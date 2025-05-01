@@ -15,7 +15,7 @@ define
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %helpers (meme helpers que dans PartitionToTimedList)
-   
+   declare 
    fun {IsNote Pi}
       case Pi of silence then true
       [] silence(...) then true
@@ -36,7 +36,6 @@ define
    end
 
    %helper pour determiner si les notes d'un accord on toute les meme duree
-
    fun {ExtendedChordTime Pi}
       A = {NewCell false}
       B = {NewCell true}
@@ -56,10 +55,7 @@ define
       else true end 
    end
 
-         
-            
-
-%helper pour determiner si une <partition> item est un accord
+   %helper pour determiner si une <partition> item est un accord
    fun {IsChord Pi}
       A = {NewCell false}
       B = {NewCell true}
@@ -81,15 +77,14 @@ define
       end 
    end
 
-%helper pour determiner si une <partition item> est une extended note 
+   %helper pour determiner si une <partition item> est une extended note 
    fun {IsExtendedNote Pi}
       case Pi of silence(duration:_) then true
       [] note(...) then true 
       else false end
    end
 
-
-%helper pour determiner si une <partition item> est un extended chord 
+   %helper pour determiner si une <partition item> est un extended chord 
    fun {IsExtendedChord Pi}
       A = {NewCell false}
       B = {NewCell true}
@@ -110,8 +105,7 @@ define
       end  
    end
 
-%helper pour changer la duration d'un accord
-
+   %helper pour changer la duration d'un accord
    fun {ChangeDChord EChord Ratio}
       case EChord of nil then nil 
       [] note(name:Note octave:O sharp:Bol duration:D instrument:I)|Ns then 
@@ -119,8 +113,7 @@ define
       end 
    end 
 
-%Helper pour determiner la duration totale d'une Flat partition
-
+   %Helper pour determiner la duration totale d'une Flat partition
    fun {TotalDuration Fp}
       fun {TotalDurationA Fp A}
          case Fp of nil then A 
@@ -134,16 +127,14 @@ define
       {TotalDurationA Fp 0.0}
    end
 
-%Helper pour determiner la duration d'un accord
-
+   %Helper pour determiner la duration d'un accord
    fun {TotalDurationChord EChord}
       case EChord of nil then 0.0 
       [] note(name:Note octave:O sharp:Bol duration:D instrument:I)|_ then D %car toutes les notes dans 1 accord on la meme duration
       end 
    end
 
-%Helper pour convertir une note en int equivalent
-
+   %Helper pour convertir une note en int equivalent
    fun {MapNote Note Sharp}
       case Note#Sharp of c#false then 0
       [] c#true then 100
@@ -160,8 +151,7 @@ define
       end
    end
 
-%Helper pour convertir int > 0 en note equivalent
-
+   %Helper pour convertir int > 0 en note equivalent
    fun {MapintPos Int}
       case Int of 0 then c#false
       [] 100 then c#true
@@ -178,8 +168,7 @@ define
       end 
    end
 
-%Helper pour convertir int <= 0 en note equivalent
-   
+   %Helper pour convertir int <= 0 en note equivalent
    fun {MapintNeg Int}
       case Int of 0 then c#false
       [] ~100 then b#false
@@ -197,8 +186,7 @@ define
       end 
    end
 
-%helper pour determiner le nb d'octave a augmenter (HowManyOUp)
-
+   %helper pour determiner le nb d'octave a augmenter (HowManyOUp)
    fun {HowManyOUp Transposednote}
       fun {HowManyOA Transposednote A}
          if (Transposednote < 1200) then A
@@ -209,9 +197,9 @@ define
       {HowManyOA Transposednote 0}
    end
 
-%helper pour determiner le nb d'octave a diminuer (HowManyODown)
-% Note tjr compris entre 0 et 1100
-% Semi < 0
+   %helper pour determiner le nb d'octave a diminuer (HowManyODown)
+   % Note tjr compris entre 0 et 1100
+   % Semi < 0
    fun {HowManyODown Note Semi}
       fun {HowManyODA Note CurrentSemi A}
          if (Note + CurrentSemi < 0) then {HowManyODA Note CurrentSemi+1200 A+1}
@@ -226,8 +214,7 @@ define
       end 
    end
 
-%helper pour transpose note en int_equivalent en note(...)
-
+   %helper pour transpose note en int_equivalent en note(...)
    fun {TransposeNote Nint Octave Semi Duration Instrument}
       New_note = (Nint + Semi) mod 1200
       Octave_Up = {HowManyOUp (Nint + Semi)}
@@ -248,6 +235,7 @@ define
 
    end
 
+   %helper pour transpose accord en [note(...) note(...) ...]
    fun {TransposeChord Pi Semi}
       case Pi of nil then nil
       [] note(name:Note octave:O sharp:Bol duration:D instrument:I)|P 
@@ -412,11 +400,6 @@ define
       end 
    end
    
-
-
-
-
-
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    
    %P2T a --> effacer avant de rendre 
@@ -456,7 +439,7 @@ define
       else {Exception.failure failure(invalidChord:Chord)} end
    end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
    fun {PartitionToTimedList Partition} 
       %case sur partition pour different cas: <note>|<chord>|<extended note>|<extended chord>|<transformation
@@ -480,8 +463,8 @@ define
       end
    end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%Transformations
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   %Transformations
 
    %transpose
    fun {Transpose Semi Partition}
@@ -501,7 +484,6 @@ define
    end
 
    %Duration
-
    fun {Duration Second Partition}
       local FlatPartition Ratio TD DurationInter in 
          FlatPartition = {PartitionToTimedList Partition}
@@ -524,7 +506,6 @@ define
    end
 
    %stretch
-
    fun {Stretch Factor Partition}
       local
          FlatList
@@ -556,7 +537,6 @@ define
    end
    
   %Drone
-
   %Amout > 0 
    fun {Drone NoteOrChord Amount}
       local ExtendedNote ExtendedChord DroneA in  
@@ -579,7 +559,6 @@ define
    end
 
   %Mute
-  
    fun{Mute Amount}
       fun {MakeSilences N}
          if N == 0 then nil
@@ -591,7 +570,6 @@ define
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
    fun {ECHSPartition Partition P2T}
       local FlatPartition ECHSPartitionRec Res in 
@@ -612,7 +590,7 @@ define
    %{Browse {ECHSPartition [a] PartitionToTimedList}} 
          
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   
+   declare
    fun {Mix P2T Music}
       % TODO
       %{Project2025.readFile CWD#'wave/animals/cow.wav'}
@@ -623,12 +601,63 @@ define
       [] wave(Filename)|MusicPart then nil
       [] merge(Musics_W_I)|MusicPart then nil
       [] loop(seconds:S Music)|MusicPart then nil
-      [] clip(low:Sample_low high:Sample_high Music) then nil 
+      [] clip(low:Sample_low high:Sample_high Music)|MusicPart then {Append {Clip Sample_low Sample_high P2T Music} {Mix P2T MusicPart}}
       [] echo(delay:D decay:F repeat:N Music)|MusicPart then nil 
       [] fade(start:Start finish:Finish Music)|MusicPart then nil
       [] cut(start:Start finish:Finish )|MusicPart then nil
       else nil end 
    end
+   {Browse {Mix PartitionToTimedList [clip(low:[~1.0] high:[0.4] [partition([a])])]}}
+
+   declare
+   fun {Clip Low High P2T Music}
+      local Ech Res ClipRec in 
+         Ech = {Mix P2T Music}
+
+         fun {ClipRec EchRec}
+            case EchRec of nil then nil
+            [] E|S then 
+               if E < Low.1 then Low.1|{ClipRec S}
+               elseif E > High.1 then High.1|{ClipRec S}
+               else E|{ClipRec S} end
+            end  
+         end 
+
+         if Low.1 > High.1 then Ech 
+         else 
+            thread Res = {ClipRec Ech} end 
+            Res 
+         end 
+      end 
+   end 
+
+   {Browse {Clip [~1.0] [0.4] PartitionToTimedList [partition([a])]}}
+
+   declare 
+   fun {Loop D Music P2T}
+      local Ech NewLen Res NewList LoopRec in 
+         NewLen = {FloatToInt D*44100.0}
+         Ech = {Mix P2T Music}
+         NewList = {MakeList NewLen}
+
+         fun {LoopRec A Original}
+            if A =< 0 then nil 
+            else 
+               case Original of nil then {LoopRec A Ech}
+               [] S|T then S|{LoopRec A-1 T}
+               end 
+            end 
+         end 
+         thread Res = {LoopRec NewLen Ech} end 
+         Res 
+      end 
+   end
+   {Browse {Length {Loop 1.0 [partition([a b])] PartitionToTimedList}}} %Len --> 1.5*44100
+   {Browse {Length {Mix PartitionToTimedList [partition([a b])]}}}
+
+
+
+
 
 
    
@@ -672,7 +701,8 @@ define
    end
    
 
-   
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   %Filtre
    fun {Repeat N  Music}
       if N =< 0 then nil
       else {Append Music {Repeat (N-1) Music}}
