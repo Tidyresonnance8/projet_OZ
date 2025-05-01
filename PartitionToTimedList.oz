@@ -5,23 +5,9 @@ import
     System
     Property
 export
-    isNote: IsNote
-    isChord: IsChord
-    isExtendedNote: IsExtendedNote
-    isExtendedChord: IsExtendedChord
     noteToExtended: NoteToExtended
     chordToExtended: ChordToExtended
     partitionToTimedList: PartitionToTimedList
-    mapNote: MapNote
-    mapintPos: MapintPos
-    mapintNeg: MapintNeg
-    transposeNote: TransposeNote
-    transpose: Transpose
-    duration: Duration
-    stretch: Stretch
-    drone: Drone
-    mute: Mute
-    
 define
     %helpers
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -29,12 +15,13 @@ define
     fun {IsNote Pi}
         case Pi of silence then true
         [] silence(...) then true
+        [] stretch(...) then false
         [] note(...) then true 
         [] H | T then false 
         [] Name#Octave then {Member Name [a b c d e f g]} 
         [] S then
             if {String.isAtom S} then 
-                String_name = {Atom.toString Pi}
+                String_name = {AtomToString Pi}
             in   
                 case String_name of N|_ then {Member [N] ["a" "b" "c" "d" "e" "f" "g"]}  %car "a" --> [97] et donc utilisez {Member [N] ..}
                 [] N then {Member [N] ["a" "b" "c" "d" "e" "f" "g"]}
@@ -296,15 +283,15 @@ define
         %case sur partition pour different cas: <note>|<chord>|<extended note>|<extended chord>|<transformation
         case Partition of nil then nil
         %completer pour transformations
-        [] duration(second:S partition:SubPartition)|P then
+        [] duration(second:S SubPartition)|P then
             {Append {PartitionToTimedList {Duration S SubPartition}} {PartitionToTimedList P}}
-        [] stretch(factor:F partition:SubPartition)|P then
+        [] stretch(factor:F SubPartition)|P then
             {Append {PartitionToTimedList {Stretch F SubPartition}} {PartitionToTimedList P}}
         [] drone(sound:S amount:A)|P then
             {Append {PartitionToTimedList {Drone S A}} {PartitionToTimedList P}}
         [] mute(amount:A)|P then
             {Append {PartitionToTimedList {Mute A}} {PartitionToTimedList P}}
-        [] transpose(semi:S partition:SubPartition)|P then
+        [] transpose(semi:S SubPartition)|P then
             {Append {PartitionToTimedList {Transpose S SubPartition}} {PartitionToTimedList P}}
         [] Pi|P andthen {IsNote Pi} == true then {NoteToExtended Pi} | {PartitionToTimedList P} 
         [] Pi|P andthen {IsChord Pi} == true then {ChordToExtended Pi} | {PartitionToTimedList P}

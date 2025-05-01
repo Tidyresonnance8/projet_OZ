@@ -14,24 +14,25 @@ define
    CWD = {Atom.toString {OS.getCWD}}#"/"
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   %helpers (meme helpers que dans PartitionToTimedList)
-   declare
+   %helpers (meme helpers que dans PartitionToTimedLis
+    
    fun {IsNote Pi}
       case Pi of silence then true
       [] silence(...) then true
+      [] stretch(...) then false
       [] note(...) then true 
       [] H | T then false 
       [] Name#Octave then {Member Name [a b c d e f g]} 
       [] S then
-         if {String.isAtom S} then 
-            String_name = {Atom.toString Pi}
-         in   
-            case String_name of N|_ then {Member [N] ["a" "b" "c" "d" "e" "f" "g"]}  %car "a" --> [97] et donc utilisez {Member [N] ..}
-            [] N then {Member [N] ["a" "b" "c" "d" "e" "f" "g"]}
-            else 
+          if {String.isAtom S} then 
+              String_name = {AtomToString Pi}
+          in   
+              case String_name of N|_ then {Member [N] ["a" "b" "c" "d" "e" "f" "g"]}  %car "a" --> [97] et donc utilisez {Member [N] ..}
+              [] N then {Member [N] ["a" "b" "c" "d" "e" "f" "g"]}
+              else 
                   false 
-            end 
-         else false end 
+              end 
+          else false end 
       end 
    end
 
@@ -445,23 +446,24 @@ define
       %case sur partition pour different cas: <note>|<chord>|<extended note>|<extended chord>|<transformation
       case Partition of nil then nil
       %completer pour transformations
-      [] duration(second:S partition:SubPartition)|P then
-         {Append {PartitionToTimedList {Duration S SubPartition}} {PartitionToTimedList P}}
-      [] stretch(factor:F partition:SubPartition)|P then
-         {Append {PartitionToTimedList {Stretch F SubPartition}} {PartitionToTimedList P}}
+      [] duration(second:S SubPartition)|P then
+          {Append {PartitionToTimedList {Duration S SubPartition}} {PartitionToTimedList P}}
+      [] stretch(factor:F SubPartition)|P then
+          {Append {PartitionToTimedList {Stretch F SubPartition}} {PartitionToTimedList P}}
       [] drone(sound:S amount:A)|P then
-         {Append {PartitionToTimedList {Drone S A}} {PartitionToTimedList P}}
+          {Append {PartitionToTimedList {Drone S A}} {PartitionToTimedList P}}
       [] mute(amount:A)|P then
-         {Append {PartitionToTimedList {Mute A}} {PartitionToTimedList P}}
-      [] transpose(semi:S partition:SubPartition)|P then
-         {Append {PartitionToTimedList {Transpose S SubPartition}} {PartitionToTimedList P}}
-      [] Pi|P andthen {IsNote Pi} == true then {NoteToExtended Pi} | {PartitionToTimedList P}
-         %[] Pi|P andthen {IsNote Pi} == false then {Exception.failure failure(invalidNote:Pi)}|nil --> trouver autre endroit 
+          {Append {PartitionToTimedList {Mute A}} {PartitionToTimedList P}}
+      [] transpose(semi:S SubPartition)|P then
+          {Append {PartitionToTimedList {Transpose S SubPartition}} {PartitionToTimedList P}}
+      [] Pi|P andthen {IsNote Pi} == true then {NoteToExtended Pi} | {PartitionToTimedList P} 
       [] Pi|P andthen {IsChord Pi} == true then {ChordToExtended Pi} | {PartitionToTimedList P}
-      [] Pi|P andthen {IsExtendedChord Pi} == true then Pi | {PartitionToTimedList P}
-      else nil 
+      [] Pi|P then
+          if ({IsExtendedChord Pi} == true) then Pi | {PartitionToTimedList P}
+          elseif ({IsExtendedChord Pi} == false) then {Exception.failure failure(invalidChord:Pi)} end 
+      else {Exception.failure failure(invalidArgument:Partition)}
       end
-   end
+  end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %Transformations
@@ -598,22 +600,24 @@ define
       case Music of nil then nil 
       [] samples(Samples)|MusicPart then {Append Samples {Mix P2T MusicPart}}
       [] partition(Partition)|MusicPart then {Append {ECHSPartition Partition P2T} {Mix P2T MusicPart}} 
-      [] wave(Filename)|MusicPart then nil
+      [] wave(Filename)|MusicPart then {Append {Wave Filename} {Mix P2T MusicPart}}
       [] merge(Musics_W_I)|MusicPart then {Append {Merge Musics_W_I P2T} {Mix P2T MusicPart}}
       [] loop(seconds:S Music)|MusicPart then {Append {Loop S Music P2T} {Mix P2T MusicPart}}
       [] clip(low:Sample_low high:Sample_high Music)|MusicPart then {Append {Clip Sample_low Sample_high P2T Music} {Mix P2T MusicPart}}
       [] echo(delay:D decay:F repeat:N Music)|MusicPart then nil 
       [] fade(start:Start finish:Finish Music)|MusicPart then nil
-      [] cut(start:Start finish:Finish )|MusicPart then nil
+      [] cut(start:Start finish:Finish Music)|MusicPart then {Append {Cut Start Finish Music} {Mix P2T MusicPart}}
       else nil end 
    end
 
-   
 
-   declare
    %%{Browse {Mix PartitionToTimedList [clip(low:[~1.0] high:[1.0] [partition([a])])]}}
    %{Browse {Length {Mix PartitionToTimedList [merge([0.5#[partition([a b])] 0.6#[partition([a f#5])] 0.7#[partition([a g b])]])]}}}
-   %helper 
+   %helper
+   
+   fun {Wave Filename} 
+      {Project2025.readFile CWD#Filename}
+   end  
    
    %helper pour determiner la liste de plus grande taille parmi une Liste de Liste 
    fun {FindBL ListofList}
@@ -713,7 +717,7 @@ define
 
    %{Browse {Clip [~1.0] [0.4] PartitionToTimedList [partition([a])]}}
 
-    
+   
    fun {Loop D Music P2T}
       local Ech NewLen Res NewList LoopRec in 
          NewLen = {FloatToInt D*44100.0}
@@ -771,15 +775,23 @@ define
    in
       {Aux 0}
    end
-   
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %Filtre
-   fun {Repeat N  Music}
-      if N =< 0 then nil
-      else {Append Music {Repeat (N-1) Music}}
-      end
+   fun {Repeat N  Music P2T}
+      local Samples RepeatRec Res in 
+         Samples = {Mix P2T Music}
+
+         fun {RepeatRec Count S}
+            if Count =< 0 then nil
+            else {Append Samples {RepeatRec (Count-1) Samples}} end 
+         end
+
+         thread Res = {RepeatRec N Samples} end 
+         Res
+      end 
    end
+   %{Browse {Length {Repeat 3 [partition([a])] PartitionToTimedList}}}
 
    
    fun {Cut Start Finish Music P2T}
@@ -797,36 +809,64 @@ define
          end
       end
    end
+   %{Browse {Length {Cut 0.0 0.5 [partition([a b])] PartitionToTimedList}}}
    
    % permet d'appliquer un facteur à tous les échantillons
    fun {Facteur Samples Factor}
       case Samples of H|T then (H * Factor)|{Facteur T Factor} end
    end
-
-   declare
-   fun {Echo Delay Decay Repeat Music P2T}
-      local 
-         DelaySamples
-         OriginalMusic
-         Decayed
-         Silence
-         EchoI
-         EchoSamples
-      in
-         OriginalMusic = {Mix P2T Music}
-         DelaySamples = {FloatToInt (Delay * 44100.0)}
-         EchoSamples =  [OriginalMusic]
-         for I in 1..Repeat do
-            Decayed = {Facteur OriginalMusic {Pow Decay I}}
-            Silence = {Zero (DelaySamples*I)}
-            EchoI = {Append Silence Decayed}
-            EchoSamples = {Append EchoSamples EchoI}
-         end
-         {Merge EchoSamples P2T}
-      end
-   end 
-
    
+    
+   fun {SumAll Lists}
+
+      fun {SumAux I}
+
+         {FoldR Lists fun {$ List Acc}{Nth List I} + Acc end 0.0}
+
+      end
+   in
+      if Lists == nil then nil
+
+      else {Map {List.number 1 {Length Lists.1} 1} SumAux}
+
+      end
+   end
+   /* 
+   fun {Echo Delay Decay Repeat Music P2T}
+
+      local Delayed Original OriginalLen DelaySample TotalLength AllLists DelayedList DecayFactor NewList Padded Result in
+         Original = {Mix P2T Music}
+
+         OriginalLen = {Length Original}
+
+         DelaySample = {FloatToInt (Delay * 44100.0 * {IntToFloat Repeat})}
+
+         TotalLength = OriginalLen + DelaySample 
+
+         AllLists = {NewCell [Original]}
+
+
+         for I in 1..Repeat do
+            Delayed = {FloatToInt (Delay * 44100.0 * {IntToFloat I})}
+
+            DecayFactor = {Pow Decay {IntToFloat I}}
+
+            NewList = {Map Original fun {$ X} X * DecayFactor end}
+
+            DelayedList = {Append {Map {MakeList Delayed} fun {$ X} 0.0 end} NewList}
+
+            Padded = {Append DelayedList {Map {MakeList (TotalLength-{Length DelayedList})} fun {$ X} 0.0 end}}
+
+            AllLists := {Append @AllLists [Padded]}
+
+         end
+         thread Result = {SumAll @AllLists} end
+         Result
+
+      end
+   end
+   {Browse {Echo 2.0 3.0 3 [partition([a])] PartitionToTimedList}}*/
+   /* 
    fun {Fade Start Finish Music P2T}
       local
          FadeOutApplied
@@ -846,15 +886,15 @@ define
          Fin   = {FloatToInt (Finish * 44100.0)}
          Samples = {Mix P2T Music}
          Longueur = {Length Samples}
-         if Longueur < Debut + Fin then
+         if Longueur < (Debut + Fin) then
             Samples
          else
             FadeInFactors = {Build Debut fun {$ I} {IntToFloat I} / {IntToFloat Debut}
                end}
             FadeOutFactors = {Build Fin fun {$ I} 1.0 - ({IntToFloat I} / {IntToFloat Fin})
                end}
-            FadeInPart = {TakeSamples Samples Debut}
-            Rest     = {DropSamples Samples Debut}
+            FadeInPart = {TakeSamples Debut Samples}
+            Rest     = {DropSamples Debut Samples}
             MiddlePart = {TakeSamples Rest (Longueur - Debut - Fin)}
             FadeOutPart= {DropSamples Rest (Longueur - Debut - Fin)}
             FadeInApplied  = {MultList FadeInPart FadeInFactors}
@@ -863,5 +903,7 @@ define
          end
       end
    end
+
+   {Browse {Fade 0.0 0.5 [partition([a b])] PartitionToTimedList}}*/
 
 end

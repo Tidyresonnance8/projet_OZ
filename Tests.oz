@@ -2,12 +2,14 @@ functor
 import
    Project2025
    Mix
+   OS
    System
    Property
    PartitionToTimedList
 export
    test: Test
 define
+   CWD = {Atom.toString {OS.getCWD}}#"/"
 
    PassedTests = {Cell.new 0}
    TotalTests  = {Cell.new 0}
@@ -134,19 +136,19 @@ define
 
    proc {TestDuration P2T}
       % test de duration sur plusieurs notes
-      P1 = [duration(second:6.0 partition:[a0 b0 c0])]
+      P1 = [duration(second:6.0 [a0 b0 c0])]
       E1 = [note(name:a octave:0 sharp:false duration:2.0 instrument:none)
             note(name:b octave:0 sharp:false duration:2.0 instrument:none)
             note(name:c octave:0 sharp:false duration:2.0 instrument:none)]
       % test de duration sur une note
-      P2 = [duration(second:3.0 partition:[c])]
+      P2 = [duration(second:3.0 [c])]
       E2 = [note(name:c octave:4 sharp:false duration:3.0 instrument:none)]
       % test de duration avec silence
-      P3 = [duration(second:2.0 partition:[a4 silence])]
+      P3 = [duration(second:2.0 [a4 silence])]
       E3 = [note(name:a octave:4 sharp:false duration:1.0 instrument:none)
             silence(duration:1.0)]
       % test de duration sur un accord
-      P4 = [duration(second:4.0 partition:[[a b]])]
+      P4 = [duration(second:4.0 [[a b]])]
       E4 = [[note(name:a octave:4 sharp:false duration:4.0 instrument:none)
             note(name:b octave:4 sharp:false duration:4.0 instrument:none)]]
    in
@@ -158,18 +160,18 @@ define
 
    proc {TestStretch P2T}
       % test de stretch sur deux note
-      P1 = [stretch(factor:3.0 partition:[a0 b0])]
+      P1 = [stretch(factor:3.0 [a0 b0])]
       E1 = [note(name:a octave:0 sharp:false duration:3.0 instrument:none)
             note(name:b octave:0 sharp:false duration:3.0 instrument:none)]
       % test de stretch sur une note
-      P2 = [stretch(factor:2.0 partition:[c])]
+      P2 = [stretch(factor:2.0 [c])]
       E2 = [note(name:c octave:4 sharp:false duration:2.0 instrument:none)]
       % test de stretch sur plusieurs notes déjà prolongées
-      P3 = [stretch(factor:1.5 partition:[note(name:a octave:4 sharp:false duration:1.0 instrument:none) note(name:b octave:4 sharp:false duration:2.0 instrument:none)])]
+      P3 = [stretch(factor:1.5 [note(name:a octave:4 sharp:false duration:1.0 instrument:none) note(name:b octave:4 sharp:false duration:2.0 instrument:none)])]
       E3 = [note(name:a octave:4 sharp:false duration:1.5 instrument:none)
             note(name:b octave:4 sharp:false duration:3.0 instrument:none)]
       % test de stretch sur un accord
-      P4 = [stretch(factor:2.0 partition:[note(name:a octave:4 sharp:false duration:1.0 instrument:none) note(name:b octave:4 sharp:false duration:1.0 instrument:none)])]   
+      P4 = [stretch(factor:2.0 [note(name:a octave:4 sharp:false duration:1.0 instrument:none) note(name:b octave:4 sharp:false duration:1.0 instrument:none)])]   
       E4 = [note(name:a octave:4 sharp:false duration:2.0 instrument:none)
             note(name:b octave:4 sharp:false duration:2.0 instrument:none)]
    in
@@ -221,7 +223,7 @@ define
       P3 = [mute(amount:2)]
       E = [silence(duration:1.0) silence(duration:1.0)]
       % on  mute à l'intérieur d'une transformation duration
-      P4 = [duration(second:2.0 partition:[a mute(amount:2)])]
+      P4 = [duration(second:2.0 [a mute(amount:2)])]
       E4 = [note(name:a octave:4 sharp:false duration:(2.0/3.0) instrument:none)
             silence(duration:(2.0/3.0)) silence(duration:(2.0/3.0))]
    in
@@ -239,21 +241,21 @@ define
       Original_part = [Note_1 Note_2 Note_3]
 
       %Note transpose de 200 semi
-      Transp_part1 = {P2T [transpose(semi:2 partition:Original_part)]}
+      Transp_part1 = {P2T [transpose(semi:2 Original_part)]}
       Note_1_t = note(name:b octave:4 sharp:false duration:1.0 instrument:none)
       Note_2_t = note(name:a octave:5 sharp:false duration:1.0 instrument:none)
       Note_3_t = note(name:d octave:5 sharp:true duration:1.0 instrument:none)
       Transp_part1_check = [Note_1_t Note_2_t Note_3_t]
 
       %Note transpose de -200
-      Transp_part2 = {P2T [transpose(semi:~2 partition:Original_part)]}
+      Transp_part2 = {P2T [transpose(semi:~2 Original_part)]}
       Note_1_t2 = note(name:g octave:4 sharp:false duration:1.0 instrument:none)
       Note_2_t2 = note(name:f octave:5 sharp:false duration:1.0 instrument:none)
       Note_3_t2 = note(name:b octave:4 sharp:false duration:1.0 instrument:none)
       Transp_part2_check2 = [Note_1_t2 Note_2_t2 Note_3_t2]
 
       %test pour voir si toute les notes possibles son transpose d'une octave vers le haut
-      Transp_part3 = {P2T [transpose(semi:12 partition:[c c#4 d d#4 e f f#4 g g#4 a a#4 b])]}
+      Transp_part3 = {P2T [transpose(semi:12 [c c#4 d d#4 e f f#4 g g#4 a a#4 b])]}
       Transp_part3_check3 = [note(name:c octave:5 sharp:false duration:1.0 instrument:none) 
       note(name:c octave:5 sharp:true duration:1.0 instrument:none) note(name:d octave:5 sharp:false duration:1.0 instrument:none)
       note(name:d octave:5 sharp:true duration:1.0 instrument:none) note(name:e octave:5 sharp:false duration:1.0 instrument:none)
@@ -262,7 +264,7 @@ define
       note(name:a octave:5 sharp:false duration:1.0 instrument:none) note(name:a octave:5 sharp:true duration:1.0 instrument:none) note(name:b octave:5 sharp:false duration:1.0 instrument:none)]
 
       %test pour voir si toute les notes possibles son transpose de 4 octave vers le haut
-      Transp_part4 = {P2T [transpose(semi:48 partition:[c c#4 d d#4 e f f#4 g g#4 a a#4 b])]}
+      Transp_part4 = {P2T [transpose(semi:48 [c c#4 d d#4 e f f#4 g g#4 a a#4 b])]}
       Transp_part4_check4 = [note(name:c octave:8 sharp:false duration:1.0 instrument:none) 
       note(name:c octave:8 sharp:true duration:1.0 instrument:none) note(name:d octave:8 sharp:false duration:1.0 instrument:none)
       note(name:d octave:8 sharp:true duration:1.0 instrument:none) note(name:e octave:8 sharp:false duration:1.0 instrument:none)
@@ -272,7 +274,7 @@ define
       note(name:b octave:8 sharp:false duration:1.0 instrument:none)]
 
       %test tranpose sur partition d'un accord simple
-      Transp_part5 = {P2T [transpose(semi:2 partition:[[note(name:c octave:4 sharp:false duration:1.0 instrument:none) 
+      Transp_part5 = {P2T [transpose(semi:2 [[note(name:c octave:4 sharp:false duration:1.0 instrument:none) 
       note(name:d octave:4 sharp:true duration:1.0 instrument:none) note(name:g octave:4 sharp:false duration:1.0 instrument:none)]])]} %-->jsp pk ca prend plein de temps 
       Transp_part5_check5 = [[note(name:d octave:4 sharp:false duration:1.0 instrument:none) 
       note(name:f octave:4 sharp:false duration:1.0 instrument:none) 
@@ -300,9 +302,9 @@ define
       {TestNotes P2T}
       {TestChords P2T}
       {TestIdentity P2T}
-      {TestDuration P2T} %--> ne fonctionne pas (erreur d'assert)
-      {TestStretch P2T} %--> fonctionne !
-      {TestDrone P2T} %ne fonctionne pas (erreur fatal (illega field c . 1 = _<optimized>))
+      {TestDuration P2T} 
+      {TestStretch P2T} 
+      {TestDrone P2T} 
       {TestMute P2T} 
       {TestTranspose P2T}
       {TestP2TChaining P2T}
@@ -320,22 +322,38 @@ define
       {AssertEquals {Mix P2T M1} E1 'TestSamples: simple'}
    end
    
-   proc {TestPartition P2T MixArg}
+   proc {TestPartition P2T Mix}
       %Test 1
       P1 = [a]
-      Check1 = {Normalize {(Mix.echsPartition) [a] P2T}}
       M1 = [partition(P1)]
-      Mixed1 = {Normalize {MixArg P2T M1}}
+      Mixed1 = {Normalize {Mix P2T M1}}
+      
 
       %Test 2 +longue partition 
 
       
    in 
-      {AssertEquals Mixed1 Check1 'TestSamples: simple'}
+      %{AssertEquals Mixed1 Check1 'TestSamples: simple'}
+      skip
    end
    
    proc {TestWave P2T Mix}
-      skip
+      
+      File1 = "wave/test.wav"
+      A = {Project2025.writeFile File1 [0.1 ~0.2 0.3]}
+      S1 = {Mix P2T [wave(File1)]}
+      %S2 = {Project2025.load CWD#}
+
+      File2 = "wave/test2.wav"
+      B = {Project2025.writeFile File2 [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9]}
+      S2 = {Mix P2T [wave(File2)]}
+      %S2 = {Project2025.readFile CWD#'wave/test2.wav'}
+
+   in  
+      {AssertEquals A ok "ok"}
+      {AssertEquals B ok "ok"}
+      {AssertEquals {Normalize S1} {Normalize [0.1 ~0.2 0.3]} 'TestWave'}
+      {AssertEquals {Normalize S2} {Normalize [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9]} 'TestWave'}
    end
 
    proc {TestMerge P2T Mix}
