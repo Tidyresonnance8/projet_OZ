@@ -15,7 +15,7 @@ define
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %helpers (meme helpers que dans PartitionToTimedList)
-    
+   declare
    fun {IsNote Pi}
       case Pi of silence then true
       [] silence(...) then true
@@ -610,7 +610,7 @@ define
 
    
 
-
+   declare
    %%{Browse {Mix PartitionToTimedList [clip(low:[~1.0] high:[1.0] [partition([a])])]}}
    %{Browse {Length {Mix PartitionToTimedList [merge([0.5#[partition([a b])] 0.6#[partition([a f#5])] 0.7#[partition([a g b])]])]}}}
    %helper 
@@ -803,7 +803,7 @@ define
       case Samples of H|T then (H * Factor)|{Facteur T Factor} end
    end
 
-   /* 
+   declare
    fun {Echo Delay Decay Repeat Music P2T}
       local 
          DelaySamples
@@ -822,9 +822,9 @@ define
             EchoI = {Append Silence Decayed}
             EchoSamples = {Append EchoSamples EchoI}
          end
-         {Merge EchoSamples}
+         {Merge EchoSamples P2T}
       end
-   end */
+   end 
 
    
    fun {Fade Start Finish Music P2T}
