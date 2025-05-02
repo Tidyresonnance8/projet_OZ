@@ -435,8 +435,11 @@ define
       [] echo(delay:D decay:F repeat:N Music)|MusicPart then {Append {Echo D F N Music P2T} {Mix P2T MusicPart}} 
       [] fade(start:Start finish:Finish Music)|MusicPart then {Append {Fade Start Finish Music P2T} {Mix P2T MusicPart}}
       [] cut(start:Start finish:Finish Music)|MusicPart then {Append {Cut Start Finish Music P2T} {Mix P2T MusicPart}}
+      [] repeat(amount:N Music)|MusicPart then {Append {Repeat N Music P2T} {Mix P2T MusicPart}}
       else nil end 
    end
+
+  
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %Helpers Echo
