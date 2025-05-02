@@ -610,8 +610,8 @@ define
       {Property.put print print(width:100)}
       {Property.put print print(depth:100)}
       {System.show 'tests have started'}
-      %{TestP2T P2T}
-      %{System.show 'P2T tests have run'}
+      {TestP2T P2T}
+      {System.show 'P2T tests have run'}
       {TestMix P2T Mix}
       {System.show 'Mix tests have run'}
       {System.show test(passed:@PassedTests total:@TotalTests)}
