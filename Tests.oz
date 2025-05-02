@@ -9,8 +9,6 @@ import
 export
    test: Test
 define
-   CWD = {Atom.toString {OS.getCWD}}#"/"
-
    PassedTests = {Cell.new 0}
    TotalTests  = {Cell.new 0}
 
@@ -100,12 +98,9 @@ define
       P2 = [Cmin4 Cmaj4 Dmin5 DSharpmin]
       E2 = {Map P2 PartitionToTimedList.chordToExtended}
 
-      %Accord de note avec duree different 
-      P3 = [[note(name:a octave:4 sharp:false duration:1.0 instrument:none) 
-      note(name:b octave:5 sharp:false duration:2.0 instrument:none) 
-      note(name:c octave:5 sharp:true duration:3.0 instrument:none)]]
    in
       {AssertEquals {P2T P2} E2 "TestChords"}
+      
    end
 
    proc {TestIdentity P2T} 
@@ -199,11 +194,25 @@ define
       E4 = [note(name:e octave:4 sharp:false duration:1.0 instrument:none) note(name:e octave:4 sharp:false duration:1.0 instrument:none)
             note(name:d octave:4 sharp:false duration:1.0 instrument:none) note(name:d octave:4 sharp:false duration:1.0 instrument:none) 
             note(name:d octave:4 sharp:false duration:1.0 instrument:none)]
+      
+      %test de drone sur un accord 
+      Cmaj4 = [c e g]
+      P5 = [drone(sound:Cmaj4 amount:3)]
+      E5 = [[note(name:c octave:4 sharp:false duration:1.0 instrument:none) 
+            note(name:e octave:4 sharp:false duration:1.0 instrument:none) 
+            note(name:g octave:4 sharp:false duration:1.0 instrument:none)]
+            [note(name:c octave:4 sharp:false duration:1.0 instrument:none) 
+            note(name:e octave:4 sharp:false duration:1.0 instrument:none) 
+            note(name:g octave:4 sharp:false duration:1.0 instrument:none)]
+            [note(name:c octave:4 sharp:false duration:1.0 instrument:none) 
+            note(name:e octave:4 sharp:false duration:1.0 instrument:none) 
+            note(name:g octave:4 sharp:false duration:1.0 instrument:none)]]
    in
       {AssertEquals {P2T P1} E1 "TestDrone"}
       {AssertEquals {P2T P2} E2 "TestDrone"}
       {AssertEquals {P2T P3} E3 "TestDrone"}
       {AssertEquals {P2T P4} E4 "TestDrone"}
+      {AssertEquals {P2T P5} E5 "TestDrone"}
    end
 
    proc {TestMute P2T}
@@ -240,14 +249,14 @@ define
       Note_3 = note(name:c octave:5 sharp:true duration:1.0 instrument:none)
       Original_part = [Note_1 Note_2 Note_3]
 
-      %Note transpose de 200 semi
+      %Note transpose de 2 semi
       Transp_part1 = {P2T [transpose(semi:2 Original_part)]}
       Note_1_t = note(name:b octave:4 sharp:false duration:1.0 instrument:none)
       Note_2_t = note(name:a octave:5 sharp:false duration:1.0 instrument:none)
       Note_3_t = note(name:d octave:5 sharp:true duration:1.0 instrument:none)
       Transp_part1_check = [Note_1_t Note_2_t Note_3_t]
 
-      %Note transpose de -200
+      %Note transpose de -2
       Transp_part2 = {P2T [transpose(semi:~2 Original_part)]}
       Note_1_t2 = note(name:g octave:4 sharp:false duration:1.0 instrument:none)
       Note_2_t2 = note(name:f octave:5 sharp:false duration:1.0 instrument:none)
@@ -273,9 +282,28 @@ define
       note(name:a octave:8 sharp:false duration:1.0 instrument:none) note(name:a octave:8 sharp:true duration:1.0 instrument:none) 
       note(name:b octave:8 sharp:false duration:1.0 instrument:none)]
 
+      %test pour voir si toute les notes possibles son transpose d'une octave vers le bas
+      Transp_part6 = {P2T [transpose(semi:~12 [c c#4 d d#4 e f f#4 g g#4 a a#4 b])]}
+      Transp_part6_check6 = [note(name:c octave:3 sharp:false duration:1.0 instrument:none) 
+      note(name:c octave:3 sharp:true duration:1.0 instrument:none) note(name:d octave:3 sharp:false duration:1.0 instrument:none)
+      note(name:d octave:3 sharp:true duration:1.0 instrument:none) note(name:e octave:3 sharp:false duration:1.0 instrument:none)
+      note(name:f octave:3 sharp:false duration:1.0 instrument:none) note(name:f octave:3 sharp:true duration:1.0 instrument:none)
+      note(name:g octave:3 sharp:false duration:1.0 instrument:none) note(name:g octave:3 sharp:true duration:1.0 instrument:none)
+      note(name:a octave:3 sharp:false duration:1.0 instrument:none) note(name:a octave:3 sharp:true duration:1.0 instrument:none) note(name:b octave:3 sharp:false duration:1.0 instrument:none)]
+
+      %test pour voir si toute les notes possibles son transpose de 4 octave vers le bas
+      Transp_part7 = {P2T [transpose(semi:~48 [c c#4 d d#4 e f f#4 g g#4 a a#4 b])]}
+      Transp_part7_check7 = [note(name:c octave:0 sharp:false duration:1.0 instrument:none) 
+      note(name:c octave:0 sharp:true duration:1.0 instrument:none) note(name:d octave:0 sharp:false duration:1.0 instrument:none)
+      note(name:d octave:0 sharp:true duration:1.0 instrument:none) note(name:e octave:0 sharp:false duration:1.0 instrument:none)
+      note(name:f octave:0 sharp:false duration:1.0 instrument:none) note(name:f octave:0 sharp:true duration:1.0 instrument:none)
+      note(name:g octave:0 sharp:false duration:1.0 instrument:none) note(name:g octave:0 sharp:true duration:1.0 instrument:none)
+      note(name:a octave:0 sharp:false duration:1.0 instrument:none) note(name:a octave:0 sharp:true duration:1.0 instrument:none) 
+      note(name:b octave:0 sharp:false duration:1.0 instrument:none)]
+
       %test tranpose sur partition d'un accord simple
       Transp_part5 = {P2T [transpose(semi:2 [[note(name:c octave:4 sharp:false duration:1.0 instrument:none) 
-      note(name:d octave:4 sharp:true duration:1.0 instrument:none) note(name:g octave:4 sharp:false duration:1.0 instrument:none)]])]} %-->jsp pk ca prend plein de temps 
+      note(name:d octave:4 sharp:true duration:1.0 instrument:none) note(name:g octave:4 sharp:false duration:1.0 instrument:none)]])]} 
       Transp_part5_check5 = [[note(name:d octave:4 sharp:false duration:1.0 instrument:none) 
       note(name:f octave:4 sharp:false duration:1.0 instrument:none) 
       note(name:a octave:4 sharp:false duration:1.0 instrument:none)]]
@@ -286,12 +314,39 @@ define
       {AssertEquals Transp_part3 Transp_part3_check3 "Test_transpose"}
       {AssertEquals Transp_part4 Transp_part4_check4 "Test_transpose"}
       {AssertEquals Transp_part5 Transp_part5_check5 "Test_transpose"}
-
+      {AssertEquals Transp_part6 Transp_part6_check6 "Test_transpose"}
+      {AssertEquals Transp_part7 Transp_part7_check7 "Test_transpose"}
       
    end
 
    proc {TestP2TChaining P2T}
-      skip
+      %test avec toute les transformations possibles:
+      %Test simples
+      Note_1 = note(name:a octave:4 sharp:false duration:1.0 instrument:none)
+      Note_2 = note(name:b octave:5 sharp:false duration:1.0 instrument:none)
+      Note_3 = note(name:c octave:5 sharp:false duration:1.0 instrument:none)
+
+      Note_1_c = note(name:a octave:4 sharp:false duration:1.0 instrument:none)
+      Note_2_c = note(name:g octave:5 sharp:false duration:1.0 instrument:none)
+      Note_3_c = note(name:c octave:5 sharp:true duration:1.0 instrument:none)
+      Original_part = [Note_1_c Note_2_c Note_3_c]
+      
+   
+   
+      P1 = [a b5 c5 [a b5 c5] silence duration(second:6.0 [a0 b0 c0]) stretch(factor:3.0 [a0 b0]) drone(sound:c#4 amount:2) mute(amount:3) transpose(semi:2 Original_part)]
+      E1 = [Note_1 Note_2 Note_3 [Note_1 Note_2 Note_3] silence(duration:1.0) note(name:a octave:0 sharp:false duration:2.0 instrument:none)
+      note(name:b octave:0 sharp:false duration:2.0 instrument:none) note(name:c octave:0 sharp:false duration:2.0 instrument:none) 
+      note(name:a octave:0 sharp:false duration:3.0 instrument:none) note(name:b octave:0 sharp:false duration:3.0 instrument:none)
+      note(name:c octave:4 sharp:true duration:1.0 instrument:none) note(name:c octave:4 sharp:true duration:1.0 instrument:none)
+      silence(duration:1.0)
+      silence(duration:1.0)
+      silence(duration:1.0)
+      note(name:b octave:4 sharp:false duration:1.0 instrument:none)
+      note(name:a octave:5 sharp:false duration:1.0 instrument:none)
+      note(name:d octave:5 sharp:true duration:1.0 instrument:none)]
+   in
+      {AssertEquals {P2T P1} E1 "testP2Tchaining"}
+
    end
 
    proc {TestEmptyChords P2T}
@@ -322,19 +377,40 @@ define
       {AssertEquals {Mix P2T M1} E1 'TestSamples: simple'}
    end
    
-   proc {TestPartition P2T Mix}
+   proc {TestPartition P2T Mixarg}
       %Test 1
-      P1 = [a]
-      M1 = [partition(P1)]
-      Mixed1 = {Normalize {Mix P2T M1}}
+      %File1 = "wave/partition.wav"
+      M1 = [partition([g])]
+      Mixed1 = {Mixarg P2T M1}
+      %A = {Project2025.run Mix P2T M1 File1} 
+      %B = {Project2025.readFile File1} %A mettre dans le rapport "erreur sur comparaison de float meme avec normalize"
       
+      %Test 2 +longue partition
+      M2 = [partition([a5 b6 c7 g#5 f#5 d d#2 g e0 f#3 c#2 a#4 f])]
+      Mixed2 = {Mixarg P2T M2}
 
-      %Test 2 +longue partition 
+      %Test 3 partition avec accord
+      Cmin4 = [c d#4 g]
+      Cmaj4 = [c e g]
+      Dmin5 = [d5 f5 a5]
+      DSharpmin = [d#5 f#5 a#5]
+      P2 = [Cmin4 Cmaj4 Dmin5 DSharpmin]
 
+      M3 = [partition(P2)]
+      Mixed3 = {Mixarg P2T M3}
+
+      %Test 4 partition avec transformations
+      P3 = [duration(second:2.0 [a mute(amount:2)]) transpose(semi:12 [c c#4 d d#4 e f f#4 g g#4 a a#4 b]) drone(sound:e amount:2) drone(sound:d amount:3)]
+      M4 = [partition(P3)]
+      Mixed4 = {Mixarg P2T M4}
       
    in 
-      %{AssertEquals Mixed1 Check1 'TestSamples: simple'}
-      skip
+      %{AssertEquals A ok "ok"}
+      {AssertEquals {Normalize Mixed1} {Normalize {Mix.echsPartition [g] P2T}} 'TestPartition: simple'}
+      {AssertEquals {Normalize Mixed2} {Normalize {Mix.echsPartition [a5 b6 c7 g#5 f#5 d d#2 g e0 f#3 c#2 a#4 f] P2T}} 'TestPartition: longue'}
+      {AssertEquals {Normalize Mixed3} {Normalize {Mix.echsPartition P2 P2T}} 'TestPartition: longue'}
+      {AssertEquals {Normalize Mixed4} {Normalize {Mix.echsPartition P3 P2T}} 'TestPartition: transformations'}
+      
    end
    
    proc {TestWave P2T Mix}
@@ -356,28 +432,154 @@ define
       {AssertEquals {Normalize S2} {Normalize [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9]} 'TestWave'}
    end
 
-   proc {TestMerge P2T Mix}
-      skip
+   proc {TestMerge P2T Mix} %
+      %test avec Intensite au dessus de 1.0
+      %teste avec samples de meme taille
+      M1 = [0.1 0.2 ~0.3 0.4]
+      MWI_1 = 2.0#[samples(M1)]
+      MWI_2 = 0.5#[samples(M1)]
+      MWI_3 = 1.0#[samples(M1)]
+      Arg = [merge([MWI_1 MWI_2 MWI_3])]
+
+      %Car clip au dessus de 1.0 et en dessous de ~1.0
+      E1 = [0.35 0.7 ~1.0 1.0]
+
+      %test sans clips M1 = [0.1 0.2 ~0.3 0.4]
+      M2 = [0.01 0.02 ~0.03 0.04]
+      MWI2_1 = 2.0#[samples(M2)]
+      MWI2_2 = 0.5#[samples(M2)]
+      MWI2_3 = 1.0#[samples(M2)]
+      Arg2 = [merge([MWI2_1 MWI2_2 MWI2_3])]
+
+      E2 = [0.035 0.07 ~0.105 0.14]
+
+      %test avec intensite compris entre 0 et 1
+      MWI3_1 = 0.75#[samples(M2)]
+      MWI3_2 = 0.5#[samples(M2)]
+      MWI3_3 = 1.0#[samples(M2)]
+      Arg3 = [merge([MWI3_1 MWI3_2 MWI3_3])]
+
+      E3 = [0.0225 0.045 ~0.0675 0.09]
+
+      %test avec samples de taille taille differente 
+      M3 = [0.01 0.02 ~0.03 0.04 0.05 0.01]
+      M4 = [0.01 0.02 ~0.03 0.04 0.0 ~0.4 0.06 0.07]
+
+      MWI4_1 = 0.75#[samples(M2)]
+      MWI4_2 = 0.5#[samples(M3)]
+      MWI4_3 = 1.0#[samples(M4)]
+      Arg4 = [merge([MWI4_1 MWI4_2 MWI4_3])]
+
+      E4 = [0.0225 0.045 ~0.0675 0.09 0.025 ~0.395 0.06 0.07]
+   in
+      {AssertEquals {Normalize {Mix P2T Arg}} {Normalize E1} "testMerge"}
+      {AssertEquals {Normalize {Mix P2T Arg2}} {Normalize E2} "testMerge"}
+      {AssertEquals {Normalize {Mix P2T Arg3}} {Normalize E3} "testMerge"}
+      {AssertEquals {Normalize {Mix P2T Arg4}} {Normalize E4} "testMerge"}
+
    end
 
    proc {TestReverse P2T Mix}
       skip
+
    end
 
    proc {TestRepeat P2T Mix}
       skip
    end
 
-   proc {TestLoop P2T Mix}
-      skip
+   proc {TestLoop P2T Mix} %
+      %Loop pour duree 2*taille M1
+      M1 = [0.1 0.2 ~0.3 0.4 0.5]
+      M_1 = [samples(M1)]
+
+      Arg = [loop(seconds:2.0*FiveSamples M_1)]
+
+      E1 = [0.1 0.2 ~0.3 0.4 0.5 0.1 0.2 ~0.3 0.4 0.5]
+
+      %Loop pour duree 3*taille M1
+   
+      Arg2 = [loop(seconds:3.0*FiveSamples M_1)]
+
+      E2 = [0.1 0.2 ~0.3 0.4 0.5 0.1 0.2 ~0.3 0.4 0.5 0.1 0.2 ~0.3 0.4 0.5]
+
+      %Loop avec tronquations
+      M3 = [0.1 0.2 ~0.3 0.4 0.5 0.1 0.2 ~0.3 0.4 0.5]
+      M_3 = [samples(M3)]
+
+      Arg3 = [loop(seconds:0.5*(2.0*FiveSamples) M_3)]
+
+      E3 = [0.1 0.2 ~0.3 0.4 0.5]
+
+      %Loop avec Partition 
+      Arg4 = [loop(seconds:4.0 [partition([a b])])]
+      S = {Mix P2T Arg4}
+      E_len = (44100*2)*2
+      A_len = {Length S}
+
+      %Loop avec Partition tronque 
+      Arg5 = [loop(seconds:1.0 [partition([a b])])]
+      S1 = {Mix P2T Arg5}
+      E_len1 = 44100
+      A_len1 = {Length S1}
+   
+   in 
+      {AssertEquals {Normalize {Mix P2T Arg}} {Normalize E1} "testLoop"}
+      {AssertEquals {Normalize {Mix P2T Arg2}} {Normalize E2} "testLoop"}
+      {AssertEquals {Normalize {Mix P2T Arg3}} {Normalize E3} "testLoop"}
+      {AssertEquals A_len E_len "testLoop"}
+      {AssertEquals A_len1 E_len1 "testLoop"}
+      
    end
 
-   proc {TestClip P2T Mix}
-      skip
+   proc {TestClip P2T Mix} %
+      %test avec clip positive 
+      M1 = [0.1 0.2 ~0.3 0.4 0.5]
+      M_1 = [samples(M1)]
+
+      Arg = [clip(low:0.1 high:0.2 M_1)]
+
+      E1 = [0.1 0.2 0.1 0.2 0.2]
+
+      %test avec clip negative
+      Arg2 = [clip(low:~1.0 high:~0.2 M_1)]
+
+      E2 = [~0.2 ~0.2 ~0.3 ~0.2 ~0.2]
+
+      %test avec low > high
+      Arg3 = [clip(low:1.0 high:~0.2 M_1)]
+
+      %test avec samples au dessus des limites d'echantillons 
+      M2 = [1.5 ~1.5 6.0 ~6.0]
+      M_2 = [samples(M2)]
+      Arg4 = [clip(low:~1.0 high:1.0 M_2)]
+      E3 = [1.0 ~1.0 1.0 ~1.0]
+   in
+      {AssertEquals {Normalize {Mix P2T Arg}} {Normalize E1} "testClip"}
+      {AssertEquals {Normalize {Mix P2T Arg2}} {Normalize E2} "testClip"}
+      {AssertEquals {Normalize {Mix P2T Arg3}} {Normalize M1} "testClip"}
+      {AssertEquals {Normalize {Mix P2T Arg4}} {Normalize E3} "testClip"}
+
    end
 
-   proc {TestEcho P2T Mix}
-      skip
+   proc {TestEcho P2T Mix} %
+      %Avec repeat de 2 
+      Original = [samples([0.1 0.1 0.1 0.1])]
+      Echo1 = [samples([0.0 0.1 0.1 0.1 0.1])]
+      Echo2 = [samples([0.0 0.0 0.1 0.1 0.1 0.1])]
+
+      Arg1 = [echo(delay:(1.0/44100.0) decay:0.9 repeat:2 Original)]
+      E1 = {Mix P2T [merge([1.0#Original 0.9#Echo1 0.81#Echo2])]}
+
+      %Avec repeat de 3
+      Echo3 = [samples([0.0 0.0 0.0 0.1 0.1 0.1 0.1])] 
+      Arg2 = [echo(delay:(1.0/44100.0) decay:0.9 repeat:3 Original)]
+
+      E2 = {Mix P2T [merge([1.0#Original 0.9#Echo1 0.81#Echo2 0.729#Echo3])]}
+
+   in 
+      {AssertEquals {Normalize {Mix P2T Arg1}} {Normalize E1} "testEcho"}
+      {AssertEquals {Normalize {Mix P2T Arg2}} {Normalize E2} "testEcho"}
    end
 
    proc {TestFade P2T Mix}
@@ -408,8 +610,8 @@ define
       {Property.put print print(width:100)}
       {Property.put print print(depth:100)}
       {System.show 'tests have started'}
-      {TestP2T P2T}
-      {System.show 'P2T tests have run'}
+      %{TestP2T P2T}
+      %{System.show 'P2T tests have run'}
       {TestMix P2T Mix}
       {System.show 'Mix tests have run'}
       {System.show test(passed:@PassedTests total:@TotalTests)}
