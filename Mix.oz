@@ -735,12 +735,14 @@ define
    %{Browse {Length {Loop 1.0 [partition([a b])] PartitionToTimedList}}} %Len --> 1.5*44100
    %{Browse {Length {Mix PartitionToTimedList [partition([a b])]}}}
 
-   
+   declare
    % fonction à appliquer sur cut
    %permet de rétirer un échantillon de la liste
    fun {DropSamples N L}
       if N =< 0 then L
-      else {DropSamples (N-1) {List.tail L}}
+      else
+         case L of nil then nil 
+         [] H|T then {DropSamples (N-1) T} end
       end
    end
    %permet de prendre un échantillon
@@ -829,7 +831,6 @@ define
       end
    end
    
-
    /*fun {Echo Delay Decay Repeat Music P2T}
       local
          Delayed
@@ -848,51 +849,95 @@ define
          OriginalLen = {Length Original}
          DelaySample = {FloatToInt (Delay * 44100.0 * {IntToFloat Repeat})}
          TotalLength = OriginalLen + DelaySample 
-         PaddedOriginal = {Append Original {List.make (TotalLength - OriginalLen) 0.0}}
+         PaddedOriginal = {Append Original {Build (TotalLength - OriginalLen) 0.0}}
          AllLists = {NewCell [PaddedOriginal]}
       
          for I in 1..Repeat do
             Delayed = {FloatToInt (Delay * 44100.0 * {IntToFloat I})}
             DecayFactor = {Pow Decay {IntToFloat I}} 
             NewList = {Map Original fun {$ X} X * DecayFactor end}
-            DelayedList = {Append {List.make Delayed 0.0} NewList}
-            Padded = {Append DelayedList {List.make (TotalLength - {Length DelayedList}) 0.0}}
+            DelayedList = {Append {Build Delayed 0.0} NewList}
+            Padded = {Append DelayedList {Build (TotalLength - {Length DelayedList}) 0.0}}
             AllLists := {Append @AllLists [Padded]}
          end
          {SumAll @AllLists} 
       end
    end
-   {Browse {Echo 0.5 0.5 2 [partition([a b])] PartitionToTimedList}}*/
-        
+   {Browse {Echo 0.5 0.5 2 [partition([a b])] PartitionToTimedList}}
+   */   
    
-
    declare
-   fun {Fade Start Finish Music P2T}
+   /*fun {Fade Start Finish Music P2T}
       local
-         Debut = {FloatToInt (Start * 44100.0)}  
-         Fin = {FloatToInt (Finish * 44100.0)}   
-         Samples = {Mix P2T Music}               
-         Longueur = {Length Samples}             
+         Debut = {FloatToInt (Start * 44100.0)}
+         Fin = {FloatToInt (Finish * 44100.0)}
+         Samples = {Mix P2T Music}
+         Longueur = {Length Samples}
       in
-         if Longueur < (Debut + Fin) then       
-            Samples                              
+         if Longueur =< (Debut + Fin) then 
+            Samples
          else
             FadeInFactors = {Build Debut fun {$ I} {IntToFloat I} / {IntToFloat (Debut - 1)} end}
             FadeOutFactors = {Build Fin fun {$ I} 1.0 - ({IntToFloat I} / {IntToFloat (Fin - 1)}) end}
-            FadeInPart = {TakeSamples Debut Samples}             
-            Rest = {DropSamples Debut Samples}                   
-            MiddlePart = {TakeSamples (Longueur - Debut - Fin) Rest} 
-            FadeOutPart = {TakeSamples Fin {DropSamples (Longueur - Debut - Fin) Rest}} 
-            FadeInApplied = {MultList FadeInPart FadeInFactors}  
-            FadeOutApplied = {MultList FadeOutPart FadeOutFactors} 
+            FadeInPart = {TakeSamples Debut Samples}
+            Rest = {DropSamples Debut Samples}
+            MiddlePart = {TakeSamples (Longueur - Debut - Fin) Rest}
+            FadeOutPart = {TakeSamples Fin {DropSamples (Longueur - Debut - Fin) Rest}}
+            FadeInApplied = {MultList FadeInPart FadeInFactors}
+            FadeOutApplied = {MultList FadeOutPart FadeOutFactors}
          in
-            {Append FadeInApplied {Append MiddlePart FadeOutApplied}} 
+            {Append FadeInApplied {Append MiddlePart FadeOutApplied}}
+         end
+      end
+   end*/
+   declare
+   fun {Fade Start Finish Music P2T}
+      local Samples TotalSamples Debut Fin Mask in
+
+         Samples = {Mix P2T Music}
+         TotalSamples = {Length Samples}
+         Debut = {FloatToInt (Start * 44100.0)}  
+         Fin = {FloatToInt (Finish * 44100.0)}   
+         if TotalSamples < (Debut + Fin) then Samples  
+         else
+            Mask = {BuildMask Debut Fin TotalSamples}
+            {MultList Samples Mask}
          end
       end
    end
+   
+   
+   fun {BuildMask Debut Fin TotalSamples}
+      FadeIn = {Build Debut fun {$ I} {IntToFloat I} / {IntToFloat (Debut - 1)} end}
+      FadeOut = {Build Fin fun {$ I} 1.0 - ({IntToFloat I} / {IntToFloat (Fin - 1)}) end}
+      MiddleLen = TotalSamples - Debut - Fin
+      Middle = if MiddleLen > 0 then {Build MiddleLen fun {$ I} 1.0 end} else nil end
+   in
+      {Append FadeIn {Append Middle FadeOut}}
+   end
+   {Browse {Fade 0.000113378 0.000113378 [samples([1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0])] PartitionToTimedList}}
+   {Browse {Fade 0.5 0.5 [partition([a b])] PartitionToTimedList}}
+   {Browse {Fade 0.5 0.5 [partition([silence(duration:1.5)])] PartitionToTimedList}}
+   {Browse {Fade 0.5 0.5 [partition([a b c d e f g])] PartitionToTimedList}}
+   
+   %{Browse {Fade 0.5 1.0 [partition([a b])] PartitionToTimedList}}
+   %{Browse {Mix PartitionToTimedList [partition([a])]}}
+   /*declare
+   % On construit une “musique” minimale : une partition [a] (la note A4 d’une seconde)
+      Music = [partition([a])]
+
+   % On applique un fondu de 0.5 s en entrée et de 0.5 s en sortie
+      FadeSamples = {Fade 0.5 0.5 Music PartitionToTimedList}
+
+   in
+   % Affiche les 5 premiers échantillons après le fade-in
+      {Browse {TakeSamples 5 FadeSamples}}
+   % Affiche les 5 derniers échantillons avant le fade-out
+      {Browse {TakeSamples 5 {List.reverse FadeSamples}}}
+   end*/
 
    
-   declare
+   /*declare
       fun {Ones N}
          if N == 0 then nil else 1.0|{Ones N-1} end
       end
@@ -903,10 +948,17 @@ define
       Finish = 3.0/44100.0 % Fade-out sur 3 samples
       FadeSamples = {Fade Start Finish Music PartitionToTimedList}
    in
-      {Browse FadeSamples} 
+      {Browse FadeSamples} */
    % Résultat attendu : [0.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 0.5 0.0]
+   /*local
+      TakeSamples
+      Music = [partition([a])] % Note A4 de 1 seconde
+      FadeSamples = {Fade 0.5 0.5 Music PartitionToTimedList}
+   in
+      {Browse {TakeSamples 5 FadeSamples}} % Début : [0.0 0.0002 0.0004 ...]
+      {Browse {TakesSamples 5 {Reverse FadeSamples}}} % Fin : [0.0004 0.0002 0.0 ...]
+   end*/
    
    
-
    
 end
