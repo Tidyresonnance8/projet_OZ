@@ -429,22 +429,19 @@ define
       [] samples(Samples)|MusicPart then {Append Samples {Mix P2T MusicPart}}
       [] partition(Partition)|MusicPart then {Append {ECHSPartition Partition P2T} {Mix P2T MusicPart}}
       [] repeat(amount:N Music)|MusicPart then {Append {Repeat N Music P2T} {Mix P2T MusicPart}}
-      %[] wave(Filename)|MusicPart then {Append {Wave Filename} {Mix P2T MusicPart}}
+      [] wave(Filename)|MusicPart then {Append {Wave Filename} {Mix P2T MusicPart}}
       [] merge(Musics_W_I)|MusicPart then {Append {Merge Musics_W_I P2T} {Mix P2T MusicPart}}
       [] loop(seconds:S Music)|MusicPart then {Append {Loop S Music P2T} {Mix P2T MusicPart}}
       [] clip(low:Sample_low high:Sample_high Music)|MusicPart then {Append {Clip Sample_low Sample_high P2T Music} {Mix P2T MusicPart}}
       [] echo(delay:D decay:F repeat:N Music)|MusicPart then {Append {Echo D F N Music P2T} {Mix P2T MusicPart}} 
       [] fade(start:Start finish:Finish Music)|MusicPart then {Append {Fade Start Finish Music P2T} {Mix P2T MusicPart}}
       [] cut(start:Start finish:Finish Music)|MusicPart then {Append {Cut Start Finish Music P2T} {Mix P2T MusicPart}}
-      [] repeat(amount:N Music)|MusicPart then {Append {Repeat N Music P2T} {Mix P2T MusicPart}}
       else nil end 
    end
 
-  
-
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %Helpers Echo
-   declare
+
    %permet de cree une liste de silence a rajoutez au debut de samples (pour echo)
    fun {Zero N}
       if N =< 0 then nil
@@ -492,10 +489,10 @@ define
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   /* 
+   
    fun {Wave Filename} 
       {Project2025.readFile CWD#Filename}
-   end */
+   end 
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %helpers pour Merge
@@ -613,16 +610,22 @@ define
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    fun {Repeat N Music P2T}
-      local Samples RepeatRec Res in 
+      local Samples RepeatRec Res in
          Samples = {Mix P2T Music}
-
          fun {RepeatRec Count S}
             if Count =< 0 then nil
             else {Append Samples {RepeatRec (Count-1) Samples}} end 
          end
+      
 
-         thread Res = {RepeatRec N Samples} end 
-         Res
+      
+         if N =< 0 then nil
+         elseif Samples == nil then nil
+         else
+            thread Res = {RepeatRec N Samples} end 
+            Res
+         end
+         
       end 
    end
 
@@ -698,15 +701,6 @@ define
       end
    end
    
-   fun {BuildMask Debut Fin TotalSamples}
-      FadeIn = {Build Debut fun {$ I} {IntToFloat I} / {IntToFloat (Debut - 1)} end}
-      FadeOut = {Build Fin fun {$ I} 1.0 - ({IntToFloat I} / {IntToFloat (Fin - 1)}) end}
-      MiddleLen = TotalSamples - Debut - Fin
-      Middle = if MiddleLen > 0 then {Build MiddleLen fun {$ I} 1.0 end} else nil end
-   in
-      {Append FadeIn {Append Middle FadeOut}}
-   end
-
    fun {Fade Start Finish Music P2T}
       local Samples TotalSamples Debut Fin Mask Duree in
 
@@ -721,6 +715,15 @@ define
             {MultList Samples Mask}
          end
       end
+   end
+    
+   fun {BuildMask Debut Fin TotalSamples}
+      FadeIn = {Build Debut fun {$ I} {IntToFloat I} / {IntToFloat (Debut - 1)} end}
+      FadeOut = {Build Fin fun {$ I} 1.0 - ({IntToFloat I} / {IntToFloat (Fin - 1)}) end}
+      MiddleLen = TotalSamples - Debut - Fin
+      Middle = if MiddleLen > 0 then {Build MiddleLen fun {$ I} 1.0 end} else nil end
+   in
+      {Append FadeIn {Append Middle FadeOut}}
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
