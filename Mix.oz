@@ -12,7 +12,7 @@ export
 define
    % Get the full path of the program
    CWD = {Atom.toString {OS.getCWD}}#"/"
-
+   declare
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %helpers (meme helpers que dans PartitionToTimedLis 
    fun {IsNote Pi}
@@ -443,7 +443,7 @@ define
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %Helpers Echo
-
+   declare
    %permet de cree une liste de silence a rajoutez au debut de samples (pour echo)
    fun {Zero N}
       if N =< 0 then nil
@@ -659,7 +659,7 @@ define
    in
       {Aux 0}
    end
-
+   
    fun {Cut Start Finish Music P2T}
       local
          Debut = {Max 0 {FloatToInt (Start * 44100.0)}}
@@ -674,6 +674,9 @@ define
          {Append Echantillon Silence}
       end
    end
+   /*declare 
+   Original = [samples([1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0])]
+   {Browse {cut 0.0 (5.0/44100.0) Original PartitionToTimedList}}*/
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    
