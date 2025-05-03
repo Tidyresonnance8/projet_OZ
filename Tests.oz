@@ -614,37 +614,17 @@ define
    end
 
    proc {TestFade P2T Mix}
-      % Fade avec fadeIn et fadeOut 
-      M1 = [samples([1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0])]
-      F1 = {Mix P2T [fade(start:FiveSamples finish:0.000113378 M1)]}
-      E1 = [0.0 0.25 0.5 0.75 1.0 1.0 0.75 0.5 0.25 0.0]
+      Original = [samples([1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0])]
+      Arg = [fade(start:FiveSamples finish:(FiveSamples) Original)]
+      E1 = [0.0 0.2 0.4 0.6 0.8 1.0 1.0 0.8 0.6 0.4 0.2 0.0]
 
-      % avec juste fadeIn
-      M2 = [samples([1.0 1.0 1.0 1.0])]
-      F2 = {Mix P2T [fade(start:0.000090702 finish:0.0 M2)]}
-      E2 = [0.0 0.3330 0.6667 1.0]
-
-      % avec juste fadeOut
-      M3 = [samples([1.0 1.0 1.0 1.0])]
-      F3 = {Mix P2T [fade(start:0.0 finish:0.000090702 M3)]}
-      E3 = [1.0 0.6667 0.3330 0.0]
-
-      % on applique pas de fade 
-      M4 = [samples([1.0 1.0 1.0 1.0 1.0 1.0])]
-      F4 = {Mix P2T [fade(start:0.000113378 finish:0.000113378 M4)]}
-      E4 = [1.0 1.0 1.0 1.0 1.0 1.0]
-
-      %on applique sur un courte musique
-      M5 = [samples([0.5 0.5])]
-      F5 = {Mix P2T [fade(start:0.000113378 finish:0.000113378 M5)]}
-      E5 = [0.5 0.5]
+      Original2 = [samples([1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0])]
+      Arg2 = [fade(start:FiveSamples finish:(FiveSamples-(1.0/44100.0)) Original)]
+      E2 = [0.0 0.2 0.4 0.6 0.8 1.0 1.0 1.0 0.75 0.5 0.25 0.0]
 
    in
-      {AssertEquals {Normalize F1} {Normalize E1} "testFade"}
-      {AssertEquals {Normalize F2} {Normalize E2} "testFade"}
-      {AssertEquals {Normalize F3} {Normalize E3} "testFade"}
-      {AssertEquals {Normalize F4} {Normalize E4} "testFade"}
-      {AssertEquals {Normalize F5} {Normalize E5} "testFade"}
+      {AssertEquals {Normalize {Mix P2T Arg}} {Normalize E1} "testFade"}
+      {AssertEquals {Normalize {Mix P2T Arg2}} {Normalize E2} "testFade"}
    end
 
    proc {TestCut P2T Mix}

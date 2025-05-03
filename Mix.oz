@@ -12,7 +12,7 @@ export
 define
    % Get the full path of the program
    CWD = {Atom.toString {OS.getCWD}}#"/"
-   declare
+    
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %helpers (meme helpers que dans PartitionToTimedLis 
    fun {IsNote Pi}
@@ -427,8 +427,9 @@ define
       %Avec appel recursive (dans l'enonce ils disent que c trop stricte mais je ne comprend pas trop)
       case Music of nil then nil 
       [] samples(Samples)|MusicPart then {Append Samples {Mix P2T MusicPart}}
-      [] partition(Partition)|MusicPart then {Append {ECHSPartition Partition P2T} {Mix P2T MusicPart}} 
-      [] wave(Filename)|MusicPart then {Append {Wave Filename} {Mix P2T MusicPart}}
+      [] partition(Partition)|MusicPart then {Append {ECHSPartition Partition P2T} {Mix P2T MusicPart}}
+      [] repeat(amount:N Music)|MusicPart then {Append {Repeat N Music P2T} {Mix P2T MusicPart}}
+      %[] wave(Filename)|MusicPart then {Append {Wave Filename} {Mix P2T MusicPart}}
       [] merge(Musics_W_I)|MusicPart then {Append {Merge Musics_W_I P2T} {Mix P2T MusicPart}}
       [] loop(seconds:S Music)|MusicPart then {Append {Loop S Music P2T} {Mix P2T MusicPart}}
       [] clip(low:Sample_low high:Sample_high Music)|MusicPart then {Append {Clip Sample_low Sample_high P2T Music} {Mix P2T MusicPart}}
@@ -491,10 +492,10 @@ define
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+   /* 
    fun {Wave Filename} 
       {Project2025.readFile CWD#Filename}
-   end 
+   end */
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %helpers pour Merge
@@ -611,7 +612,7 @@ define
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   fun {Repeat N  Music P2T}
+   fun {Repeat N Music P2T}
       local Samples RepeatRec Res in 
          Samples = {Mix P2T Music}
 
@@ -637,9 +638,11 @@ define
       end
    end
    %permet de prendre un échantillon
+   
    fun {TakeSamples N L}
       if N =< 0 then nil
-      else case L of H|T then H|{TakeSamples (N-1) T} end
+      else case L of H|T then H|{TakeSamples (N-1) T}
+            else nil end
       end
    end
    
@@ -662,21 +665,21 @@ define
    
    fun {Cut Start Finish Music P2T}
       local
-         Debut = {Max 0 {FloatToInt (Start * 44100.0)}}
-         Fin = {Max 0 {FloatToInt (Finish * 44100.0)}}
+         Debut = {FloatToInt (Start * 44100.0)}
+         Fin = {FloatToInt (Finish * 44100.0)}-1
          LesEchantillons = {Mix P2T Music}
+         Duree = {IntToFloat {Length LesEchantillons}}/44100.0
          ApresDebut = {DropSamples Debut LesEchantillons}
-         NbSamples = (Fin - Debut)
-         Echantillon = {TakeSamples NbSamples ApresDebut}
-         Manque = {Max 0 (NbSamples - {Length Echantillon})}   
-         Silence = {Zero Manque}
+         Echantillon = {TakeSamples (Fin - Debut) ApresDebut}
+         Manque = (Fin - Debut) - {Length Echantillon}
+         Silence = {Zero Manque+1}
       in
-         {Append Echantillon Silence}
+         if (Finish - Start) > Duree then {Append Echantillon Silence}
+         else
+            Echantillon
+         end
       end
    end
-   /*declare 
-   Original = [samples([1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0])]
-   {Browse {cut 0.0 (5.0/44100.0) Original PartitionToTimedList}}*/
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    
@@ -705,13 +708,14 @@ define
    end
 
    fun {Fade Start Finish Music P2T}
-      local Samples TotalSamples Debut Fin Mask in
+      local Samples TotalSamples Debut Fin Mask Duree in
 
          Samples = {Mix P2T Music}
          TotalSamples = {Length Samples}
-         Debut = {FloatToInt (Start * 44100.0)}  
-         Fin = {FloatToInt (Finish * 44100.0)}   
-         if TotalSamples < (Debut + Fin) then Samples  
+         Duree = {IntToFloat TotalSamples}*44100.0
+         Debut = {FloatToInt (Start * 44100.0)}+1 
+         Fin = {FloatToInt (Finish * 44100.0)}+1
+         if Duree < (Start + Finish) then Samples  
          else
             Mask = {BuildMask Debut Fin TotalSamples}
             {MultList Samples Mask}
