@@ -382,7 +382,7 @@ define
       %File1 = "wave/partition.wav"
       M1 = [partition([g])]
       Mixed1 = {Mixarg P2T M1}
-      %A = {Project2025.run Mix P2T M1 File1} 
+      %C = {Project2025.writeFile File1 Mixed1} 
       %B = {Project2025.readFile File1} %A mettre dans le rapport "erreur sur comparaison de float meme avec normalize"
       
       %Test 2 +longue partition
@@ -405,7 +405,8 @@ define
       Mixed4 = {Mixarg P2T M4}
       
    in 
-      %{AssertEquals A ok "ok"}
+      %{AssertEquals C ok "ok"}
+      %{AssertEquals {Normalize B} {Normalize Mixed1} "testPartition: wave"}
       {AssertEquals {Normalize Mixed1} {Normalize {Mix.echsPartition [g] P2T}} 'TestPartition: simple'}
       {AssertEquals {Normalize Mixed2} {Normalize {Mix.echsPartition [a5 b6 c7 g#5 f#5 d d#2 g e0 f#3 c#2 a#4 f] P2T}} 'TestPartition: longue'}
       {AssertEquals {Normalize Mixed3} {Normalize {Mix.echsPartition P2 P2T}} 'TestPartition: longue'}
@@ -570,6 +571,8 @@ define
 
       Arg1 = [echo(delay:(1.0/44100.0) decay:0.9 repeat:2 Original)]
       E1 = {Mix P2T [merge([1.0#Original 0.9#Echo1 0.81#Echo2])]}
+      %File1 = "wave/testEcho.wav"
+      %A = {Project2025.writeFile File1 {Mix P2T [echo(delay:3.0 decay:0.1 repeat:3 [partition([a])])]}} 
 
       %Avec repeat de 3
       Echo3 = [samples([0.0 0.0 0.0 0.1 0.1 0.1 0.1])] 
@@ -578,6 +581,7 @@ define
       E2 = {Mix P2T [merge([1.0#Original 0.9#Echo1 0.81#Echo2 0.729#Echo3])]}
 
    in 
+      %{AssertEquals A ok "ok"}
       {AssertEquals {Normalize {Mix P2T Arg1}} {Normalize E1} "testEcho"}
       {AssertEquals {Normalize {Mix P2T Arg2}} {Normalize E2} "testEcho"}
    end

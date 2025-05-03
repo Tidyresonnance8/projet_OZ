@@ -15,7 +15,6 @@ define
     fun {IsNote Pi}
         case Pi of silence then true
         [] silence(...) then true
-        [] stretch(...) then false
         [] note(...) then true 
         [] H | T then false 
         [] Name#Octave then {Member Name [a b c d e f g]} 
@@ -301,6 +300,7 @@ define
         else {Exception.failure failure(invalidArgument:Partition)}
         end
     end
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Transformations
     
@@ -313,8 +313,7 @@ define
                 [] note(name:Note octave:O sharp:Bol duration:D instrument:I)|Pi then
                     {TransposeNote {MapNote Note Bol} O Semi D I}|{TransposeInter Semi Pi}
                 [] silence(...)|Pi then silence(...)|{TransposeInter Semi Pi}
-                [] L|Pi andthen {IsExtendedChord L} == true then {TransposeChord L Semi}|{TransposeInter Semi Pi}
-                %rajoutez cas Ou Pi est un extended_chord 
+                [] L|Pi andthen {IsExtendedChord L} == true then {TransposeChord L Semi}|{TransposeInter Semi Pi} 
                 end
             end 
             {TransposeInter Semi*100 P}
@@ -383,7 +382,8 @@ define
                 else {DroneA NoteOrChord A-1 NoteOrChord|Acc} end 
             end
 
-            if {IsNote NoteOrChord} == true then 
+            if Amount == 0 then nil 
+            elseif {IsNote NoteOrChord} == true then 
                 ExtendedNote = {NoteToExtended NoteOrChord}
                 {DroneA ExtendedNote Amount nil}
             elseif {IsChord NoteOrChord} == true then 
