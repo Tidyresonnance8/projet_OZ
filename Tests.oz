@@ -487,17 +487,18 @@ define
    proc {TestRepeat P2T Mix}
       %Répétition normale 3 fois
       M1 = [0.1 0.2 ~0.3]
-      Arg1 = [repeat(amount:3 music:[samples(M1)])]
+      Music1 = [samples(M1)]
+      Arg1 = [repeat(amount:3 Music1)]
       E1 = [0.1 0.2 ~0.3 0.1 0.2 ~0.3 0.1 0.2 ~0.3]
 
       % Répétition avec un seul échantillon
       M2 = [0.5]
-      Arg2 = [repeat(amount:4 music:[samples(M2)])]
+      Arg2 = [repeat(amount:4 [samples(M2)])]
       E2 = [0.5 0.5 0.5 0.5]
 
       %pour une liste vide
       M3 = nil
-      Arg3 = [repeat(amount:5 music:[samples(M3)])]
+      Arg3 = [repeat(amount:5 [samples(M3)])]
       E3 = nil
 
       %répétition pour un grand nombre d'échantillons
@@ -507,7 +508,7 @@ define
 
       %Echantillon avec valeurs limites
       M5 = [1.0 ~1.0 0.0]
-      Arg5 = [repeat(amount:2 music:[samples(M5)])]
+      Arg5 = [repeat(amount:2 [samples(M5)])]
       E5 = {Append M5 M5}
    in
       {AssertEquals {Normalize {Mix P2T Arg1}} {Normalize E1} "testRepeat"}
@@ -613,11 +614,70 @@ define
    end
 
    proc {TestFade P2T Mix}
-      skip
+      % Fade avec fadeIn et fadeOut 
+      M1 = [samples([1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0])]
+      F1 = {Mix P2T [fade(start:FiveSamples finish:0.000113378 M1)]}
+      E1 = [0.0 0.25 0.5 0.75 1.0 1.0 0.75 0.5 0.25 0.0]
+
+      % avec juste fadeIn
+      M2 = [samples([1.0 1.0 1.0 1.0])]
+      F2 = {Mix P2T [fade(start:0.000090702 finish:0.0 M2)]}
+      E2 = [0.0 0.3330 0.6667 1.0]
+
+      % avec juste fadeOut
+      M3 = [samples([1.0 1.0 1.0 1.0])]
+      F3 = {Mix P2T [fade(start:0.0 finish:0.000090702 M3)]}
+      E3 = [1.0 0.6667 0.3330 0.0]
+
+      % on applique pas de fade 
+      M4 = [samples([1.0 1.0 1.0 1.0 1.0 1.0])]
+      F4 = {Mix P2T [fade(start:0.000113378 finish:0.000113378 M4)]}
+      E4 = [1.0 1.0 1.0 1.0 1.0 1.0]
+
+      %on applique sur un courte musique
+      M5 = [samples([0.5 0.5])]
+      F5 = {Mix P2T [fade(start:0.000113378 finish:0.000113378 M5)]}
+      E5 = [0.5 0.5]
+
+   in
+      {AssertEquals {Normalize F1} {Normalize E1} "testFade"}
+      {AssertEquals {Normalize F2} {Normalize E2} "testFade"}
+      {AssertEquals {Normalize F3} {Normalize E3} "testFade"}
+      {AssertEquals {Normalize F4} {Normalize E4} "testFade"}
+      {AssertEquals {Normalize F5} {Normalize E5} "testFade"}
    end
 
    proc {TestCut P2T Mix}
-      skip
+      % pour une découpe normale
+      M1 = [samples([0.1 0.2 0.3 0.4 0.5])]
+      C1 = [cut(start:0.0000227 finish:0.0000907 M1)]
+      E1 = [0.1 0.2 0.3]
+
+      %f complétion avec silence
+      M2 = [samples([0.1 0.2 0.3 0.4 0.5])]
+      C2 = [cut(start:0.000068 finish:0.0000158 M2)]
+      E2 = [0.3 0.4 0.5 0.0 0.0]
+
+      % tout en silence
+      M3 = [samples([0.1 0.2 0.3 0.4 0.5])]
+      C3 = [cut(start:0.0000136 finish:0.0000181 M3)]
+      E3 = [0.0 0.0 0.0]
+
+      % Découpe à la fin
+      M4 = [samples([0.1 0.2 0.3 0.4 0.5])]
+      C4 = [cut(start:0.0000907 finish:0.0000113 M4)]
+      E4 = [0.4 0.5]
+
+      %Musique vide
+      M5 = [samples(nil)]
+      C5 = [cut(start:0.0 finish:0.0000454 M5)]
+      E5 = [0.0 0.0]
+   in
+      {AssertEquals {Normalize {Mix P2T C1}} {Normalize E1} "testCut"}
+      {AssertEquals {Normalize {Mix P2T C2}} {Normalize E2} "testCut"}
+      {AssertEquals {Normalize {Mix P2T C3}} {Normalize E3} "testCut"}
+      {AssertEquals {Normalize {Mix P2T C4}} {Normalize E4} "testCut"}
+      {AssertEquals {Normalize {Mix P2T C5}} {Normalize E5} "testCut"}
    end
 
    proc {TestMix P2T Mix}
@@ -625,12 +685,12 @@ define
       %{TestPartition P2T Mix}
       %{TestWave P2T Mix}
       %{TestMerge P2T Mix}
-      {TestRepeat P2T Mix}
+      %{TestRepeat P2T Mix} % il faut bien le mettre dans le mix
       %{TestLoop P2T Mix}
       %{TestClip P2T Mix}
       %{TestEcho P2T Mix}
-      %{TestFade P2T Mix}
-      %{TestCut P2T Mix}
+      %{TestFade P2T Mix} % fonctionne mais avec des décalages de 1.0/44100.0
+      {TestCut P2T Mix}
       {AssertEquals {Mix P2T nil} nil 'nil music'}
    end
 

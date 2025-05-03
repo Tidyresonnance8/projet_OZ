@@ -662,17 +662,16 @@ define
 
    fun {Cut Start Finish Music P2T}
       local
-         Debut = {FloatToInt (Start * 44100.0)}
-         Fin = {FloatToInt (Finish * 44100.0)}
+         Debut = {Max 0 {FloatToInt (Start * 44100.0)}}
+         Fin = {Max 0 {FloatToInt (Finish * 44100.0)}}
          LesEchantillons = {Mix P2T Music}
          ApresDebut = {DropSamples Debut LesEchantillons}
-         Echantillon = {TakeSamples (Fin - Debut) ApresDebut}
-         Manque = (Fin - Debut) - {Length Echantillon}
+         NbSamples = (Fin - Debut)
+         Echantillon = {TakeSamples NbSamples ApresDebut}
+         Manque = {Max 0 (NbSamples - {Length Echantillon})}   
          Silence = {Zero Manque}
       in
-         if Manque =< 0 then Echantillon
-         else {Append Echantillon Silence}
-         end
+         {Append Echantillon Silence}
       end
    end
 
@@ -693,6 +692,15 @@ define
       end
    end
    
+   fun {BuildMask Debut Fin TotalSamples}
+      FadeIn = {Build Debut fun {$ I} {IntToFloat I} / {IntToFloat (Debut - 1)} end}
+      FadeOut = {Build Fin fun {$ I} 1.0 - ({IntToFloat I} / {IntToFloat (Fin - 1)}) end}
+      MiddleLen = TotalSamples - Debut - Fin
+      Middle = if MiddleLen > 0 then {Build MiddleLen fun {$ I} 1.0 end} else nil end
+   in
+      {Append FadeIn {Append Middle FadeOut}}
+   end
+
    fun {Fade Start Finish Music P2T}
       local Samples TotalSamples Debut Fin Mask in
 
@@ -706,15 +714,6 @@ define
             {MultList Samples Mask}
          end
       end
-   end
-    
-   fun {BuildMask Debut Fin TotalSamples}
-      FadeIn = {Build Debut fun {$ I} {IntToFloat I} / {IntToFloat (Debut - 1)} end}
-      FadeOut = {Build Fin fun {$ I} 1.0 - ({IntToFloat I} / {IntToFloat (Fin - 1)}) end}
-      MiddleLen = TotalSamples - Debut - Fin
-      Middle = if MiddleLen > 0 then {Build MiddleLen fun {$ I} 1.0 end} else nil end
-   in
-      {Append FadeIn {Append Middle FadeOut}}
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
