@@ -429,6 +429,7 @@ define
       [] partition(Partition)|MusicPart then {Append {ECHSPartition Partition P2T} {Mix P2T MusicPart}}
       [] repeat(amount:N Music)|MusicPart then {Append {Repeat N Music P2T} {Mix P2T MusicPart}}
       [] wave(Filename)|MusicPart then {Append {Wave Filename} {Mix P2T MusicPart}}
+      [] wave(Filename)|MusicPart then {Append {Wave Filename} {Mix P2T MusicPart}}
       [] merge(Musics_W_I)|MusicPart then {Append {Merge Musics_W_I P2T} {Mix P2T MusicPart}}
       [] loop(seconds:S Music)|MusicPart then {Append {Loop S Music P2T} {Mix P2T MusicPart}}
       [] clip(low:Sample_low high:Sample_high Music)|MusicPart then {Append {Clip Sample_low Sample_high P2T Music} {Mix P2T MusicPart}}
@@ -609,20 +610,22 @@ define
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    fun {Repeat N Music P2T}
-      local Samples RepeatRec Res in 
+      local Samples RepeatRec Res in
          Samples = {Mix P2T Music}
          fun {RepeatRec Count S}
             if Count =< 0 then nil
             else {Append Samples {RepeatRec (Count-1) Samples}} end 
          end
+      
 
-         Samples = {Mix P2T Music}
+      
          if N =< 0 then nil
-         elseif Samples == nil then nil  
-         else 
+         elseif Samples == nil then nil
+         else
             thread Res = {RepeatRec N Samples} end 
             Res
-         end 
+         end
+         
       end 
    end
 

@@ -486,7 +486,30 @@ define
    end
 
    proc {TestRepeat P2T Mix}
-      skip
+      %test avec repeat de 3 fois 
+      M1 = [0.1 0.2 ~0.3]
+      Arg1 = [repeat(amount:3 [samples(M1)])]
+      E1 = [0.1 0.2 ~0.3 0.1 0.2 ~0.3 0.1 0.2 ~0.3]
+
+      %test avec répétition d'un seul sample
+      M2 = [0.5]
+      Arg2 = [repeat(amount:4 [samples(M2)])]
+      E2 = [0.5 0.5 0.5 0.5]
+
+      %test liste vide
+      M3 = nil
+      Arg3 = [repeat(amount:5 [samples(M3)])]
+      E3 = nil
+
+      %test valeurs limites
+      M5 = [1.0 ~1.0 0.0]
+      Arg5 = [repeat(amount:0 [samples(M5)])]
+      E5 = nil
+   in
+      {AssertEquals {Normalize {Mix P2T Arg1}} {Normalize E1} "testRepeat"}
+      {AssertEquals {Normalize {Mix P2T Arg2}} {Normalize E2} "testRepeat"}
+      {AssertEquals {Normalize {Mix P2T Arg3}} {Normalize E3} "testRepeat"}
+      {AssertEquals {Normalize {Mix P2T Arg5}} {Normalize E5} "testRepeat"}
    end
 
    proc {TestLoop P2T Mix} %
@@ -601,7 +624,7 @@ define
    end
 
    proc {TestCut P2T Mix}
-      skip
+     skip
    end
 
    proc {TestMix P2T Mix}
