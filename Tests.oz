@@ -583,7 +583,17 @@ define
    end
 
    proc {TestFade P2T Mix}
-      skip
+      Original = [samples([1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0])]
+      Arg = [fade(start:FiveSamples finish:(FiveSamples) Original)]
+      E1 = [0.0 0.2 0.4 0.6 0.8 1.0 1.0 0.8 0.6 0.4 0.2 0.0]
+
+      Original2 = [samples([1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0])]
+      Arg2 = [fade(start:FiveSamples finish:(FiveSamples-(1.0/44100.0)) Original)]
+      E2 = [0.0 0.2 0.4 0.6 0.8 1.0 1.0 1.0 0.75 0.5 0.25 0.0]
+
+   in
+      {AssertEquals {Normalize {Mix P2T Arg}} {Normalize E1} "testFade"}
+      {AssertEquals {Normalize {Mix P2T Arg2}} {Normalize E2} "testFade"}
    end
 
    proc {TestCut P2T Mix}
