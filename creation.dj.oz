@@ -1,3 +1,5 @@
+%Prénom:Jean-Louis | Nom:Peffer | Noma:72232300
+%Prénom:Isaac | Nom:Yamdjieu Tahadie | Noma:07152201
 local
     Tune = [e6 d6 a5 f5 d5 c6 b a#5 g g a#4 b]
     Refr_1 = [stretch(factor:0.5 [e6]) stretch(factor:0.15 [d6]) stretch(factor:0.5 [a5]) stretch(factor:0.45 [f5])

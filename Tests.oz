@@ -1,3 +1,5 @@
+%Prénom:Jean-Louis | Nom:Peffer | Noma:72232300
+%Prénom:Isaac | Nom:Yamdjieu Tahadie | Noma:07152201
 functor
 import
    Project2025
@@ -656,7 +658,57 @@ define
    end
 
    proc {TestMixChaining P2T Mix}
-   skip 
+      M1 = [0.1 0.2 ~0.3 0.4]
+      MWI_1 = 2.0#[samples(M1)]
+      MWI_2 = 0.5#[samples(M1)]
+      MWI_3 = 1.0#[samples(M1)]
+      Arg1 = merge([MWI_1 MWI_2 MWI_3])
+
+      M2 = [0.5]
+      Arg2 = repeat(amount:4 [samples(M2)])
+
+      M3 = [0.1 0.2 ~0.3 0.4 0.5]
+      M_3 = [samples(M3)]
+      Arg3 = loop(seconds:2.0*FiveSamples M_3)
+
+      M4 = [0.1 0.2 ~0.3 0.4 0.5]
+      M_4 = [samples(M4)]
+      Arg4 = clip(low:0.1 high:0.2 M_4)
+
+      M_5 = [samples([1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0])]
+      Arg5 = fade(start:FiveSamples finish:(FiveSamples) M_5)
+
+      M_6 = [samples([1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0])]
+      Arg6 = cut(start:0.0 finish:FiveSamples M_6)
+
+      Original = [samples([0.1 0.1 0.1 0.1])]
+      Echo1 = [samples([0.0 0.1 0.1 0.1 0.1])]
+      Echo2 = [samples([0.0 0.0 0.1 0.1 0.1 0.1])]
+
+      Arg7 = echo(delay:(1.0/44100.0) decay:0.9 repeat:2 Original)
+      E_end = {Mix P2T [merge([1.0#Original 0.9#Echo1 0.81#Echo2])]}
+
+      Arg0 = samples([0.1 ~0.2 0.3])
+
+      File1 = "test.wav"
+      A = {Project2025.writeFile File1 [0.1 ~0.2 0.3]}
+
+      Arg_00 = wave(File1)
+
+
+
+
+      E = {Append [0.1 ~0.2 0.3 0.1 ~0.2 0.3 0.35 0.7 ~1.0 1.0 
+      0.5 0.5 0.5 0.5 
+      0.1 0.2 ~0.3 0.4 0.5 0.1 0.2 ~0.3 0.4 0.5
+      0.1 0.2 0.1 0.2 0.2
+      0.0 0.2 0.4 0.6 0.8 1.0 1.0 0.8 0.6 0.4 0.2 0.0
+      1.0 1.0 1.0 1.0] E_end}
+
+      Music = [Arg_00 Arg0 Arg1 Arg2 Arg3 Arg4 Arg5 Arg6 Arg7]
+   in
+      {AssertEquals A ok "ok"}
+      {AssertEquals {Normalize {Mix P2T Music}} {Normalize E} "testMixchaining"}
    end 
 
    proc {TestMix P2T Mix}
