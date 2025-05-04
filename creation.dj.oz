@@ -1,11 +1,5 @@
 local
     Tune = [e6 d6 a5 f5 d5 c6 b a#5 g g a#4 b]
-    /* 
-    End1 = [stretch(factor:1.5 [b]) stretch(factor:0.5 [a]) stretch(factor:2.0 [a])]
-    End2 = [stretch(factor:1.5 [a]) stretch(factor:0.5 [g]) stretch(factor:2.0 [g])]
-    Interlude = [a a b g a stretch(factor:0.5 [b c5])
-                     b g a stretch(factor:0.5 [b c5])
-                 b a g a stretch(factor:2.0 [d]) ]*/
     Refr_1 = [stretch(factor:0.5 [e6]) stretch(factor:0.15 [d6]) stretch(factor:0.5 [a5]) stretch(factor:0.45 [f5])
             stretch(factor:0.5 [e6]) stretch(factor:0.15 [d6]) stretch(factor:0.5 [a5]) stretch(factor:0.45 [f5])]
     Repeat_refr2 = repeat(amount:2 [partition(Refr_1)])
@@ -26,6 +20,6 @@ local
                 stretch(factor:2.4 [Chord1]) stretch(factor:2.4 [Chord2]) stretch(factor:2.4 [Chord3]) stretch(factor:2.4 [Chord4])]
     Partition_part3 = {Flatten ChordPart}
 in
-    %Ode to joy transposed 2 octaves + haut  avec un fade in et fade out
+    %
     [repeat(amount:2 [partition(Partition_part1) partition(Partition_part2)]) merge([0.125#[partition(Partition_part3)]])]
 end
