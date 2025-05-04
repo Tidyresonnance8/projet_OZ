@@ -14,7 +14,7 @@ define
     
     % Get the arguments of the program. By default tests are set to false and music is "joy.dj.oz"
     Args = {Application.getArgs record('test'(single type:bool default:false optional:true)
-                                        'music'(single type:string default:'joy.dj.oz')
+                                        'music'(single type:string default:'example.dj.oz')
                                         )}
     
     % Load the music

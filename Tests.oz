@@ -166,9 +166,9 @@ define
       E3 = [note(name:a octave:4 sharp:false duration:1.5 instrument:none)
             note(name:b octave:4 sharp:false duration:3.0 instrument:none)]
       % test de stretch sur un accord
-      P4 = [stretch(factor:2.0 [note(name:a octave:4 sharp:false duration:1.0 instrument:none) note(name:b octave:4 sharp:false duration:1.0 instrument:none)])]   
-      E4 = [note(name:a octave:4 sharp:false duration:2.0 instrument:none)
-            note(name:b octave:4 sharp:false duration:2.0 instrument:none)]
+      P4 = [stretch(factor:2.0 [[note(name:a octave:4 sharp:false duration:1.0 instrument:none) note(name:b octave:4 sharp:false duration:1.0 instrument:none)]])]   
+      E4 = [[note(name:a octave:4 sharp:false duration:2.0 instrument:none)
+            note(name:b octave:4 sharp:false duration:2.0 instrument:none)]]
    in
       {AssertEquals {P2T P1} E1 "TestStretch"}
       {AssertEquals {P2T P2} E2 "TestStretch"}
@@ -416,12 +416,12 @@ define
    
    proc {TestWave P2T Mix}
       
-      File1 = "wave/test.wav"
+      File1 = "test.wav"
       A = {Project2025.writeFile File1 [0.1 ~0.2 0.3]}
       S1 = {Mix P2T [wave(File1)]}
       %S2 = {Project2025.load CWD#}
 
-      File2 = "wave/test2.wav"
+      File2 = "test2.wav"
       B = {Project2025.writeFile File2 [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9]}
       S2 = {Mix P2T [wave(File2)]}
       %S2 = {Project2025.readFile CWD#'wave/test2.wav'}
@@ -614,18 +614,50 @@ define
       Arg = [fade(start:FiveSamples finish:(FiveSamples) Original)]
       E1 = [0.0 0.2 0.4 0.6 0.8 1.0 1.0 0.8 0.6 0.4 0.2 0.0]
 
-      Original2 = [samples([1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0])]
       Arg2 = [fade(start:FiveSamples finish:(FiveSamples-(1.0/44100.0)) Original)]
       E2 = [0.0 0.2 0.4 0.6 0.8 1.0 1.0 1.0 0.75 0.5 0.25 0.0]
+
+      %rajoutez fade non applicable
+      Arg3 = [fade(start:FiveSamples finish:(3.0*FiveSamples) Original)]
+      E3 = [1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0]
 
    in
       {AssertEquals {Normalize {Mix P2T Arg}} {Normalize E1} "testFade"}
       {AssertEquals {Normalize {Mix P2T Arg2}} {Normalize E2} "testFade"}
+      {AssertEquals {Normalize {Mix P2T Arg3}} {Normalize E3} "testFade"}
    end
 
    proc {TestCut P2T Mix}
-     skip
+      %Garder les 4 premiers sample
+      Original = [samples([1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0])]
+      Arg = [cut(start:0.0 finish:FiveSamples Original)]
+      E1 = [1.0 1.0 1.0 1.0]
+
+      %%Garder les 4 dernier sample
+      Original2 = [samples([0.1 0.2 0.3 0.4 0.5 0.6 0.8 0.9 0.10 1.0 1.0 1.0 1.0])]
+      Arg2 = [cut(start:(9.0/44100.0) finish:(2.0*FiveSamples+(4.0/44100.0)) Original2)]
+      E2 = [1.0 1.0 1.0 1.0]
+
+      %Avec intervalle qui excede la taille de la music
+      Arg3 = [cut(start:(9.0/44100.0) finish:(2.0*FiveSamples+(6.0/44100.0)) Original2)]
+      E3 = [1.0 1.0 1.0 1.0 0.0 0.0]
+
+      %Avec start > taille de la music
+      Arg4 = [cut(start:(2.0*FiveSamples+(3.0/44100.0)) finish:(2.0*FiveSamples+(6.0/44100.0)) Original2)]
+      E4 = [0.0 0.0] 
+
+
+   in
+      {AssertEquals {Normalize {Mix P2T Arg}} {Normalize E1} "testCut"}
+      {AssertEquals {Normalize {Mix P2T Arg2}} {Normalize E2} "testCut"}
+      {AssertEquals {Normalize {Mix P2T Arg3}} {Normalize E3} "testCut"}
+      {AssertEquals {Normalize {Mix P2T Arg4}} {Normalize E4} "testCut"}
+      
    end
+
+   proc {TestMixChaining P2T Mix}
+   skip 
+   end 
 
    proc {TestMix P2T Mix}
       {TestSamples P2T Mix}
@@ -638,6 +670,7 @@ define
       {TestEcho P2T Mix}
       {TestFade P2T Mix}
       {TestCut P2T Mix}
+      {TestMixChaining P2T Mix}
       {AssertEquals {Mix P2T nil} nil 'nil music'}
    end
 

@@ -362,8 +362,8 @@ define
                         NewChordAccumulator
                     in
                         NewChordAccumulator = {NewCell nil}
-                        for chord in ChordList do
-                            NewChordAccumulator := note(name:chord.name octave:chord.octave sharp:chord.sharp duration:chord.duration*Factor instrument:chord.instrument) | @NewChordAccumulator
+                        for Chord in ChordList do
+                            NewChordAccumulator := note(name:Chord.name octave:Chord.octave sharp:Chord.sharp duration:(Chord.duration)*Factor instrument:Chord.instrument) | @NewChordAccumulator
                         end
                         Accumulator :=  {List.reverse @NewChordAccumulator} | @Accumulator
                     end

@@ -252,26 +252,6 @@ define
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   %Transformations
-
-   %transpose
-   fun {Transpose Semi Partition}
-      local P TransposeInter in 
-         P = {PartitionToTimedList Partition}
-         fun {TransposeInter Semi ExtendedPart}
-            case ExtendedPart of nil then nil 
-            [] note(name:Note octave:O sharp:Bol duration:D instrument:I)|Pi then
-                  {TransposeNote {MapNote Note Bol} O Semi D I}|{TransposeInter Semi Pi}
-            [] silence(...)|Pi then silence(...)|{TransposeInter Semi Pi}
-            [] L|Pi andthen {IsExtendedChord L} == true then {TransposeChord L Semi}|{TransposeInter Semi Pi}
-            %rajoutez cas Ou Pi est un extended_chord 
-            end
-         end 
-         {TransposeInter Semi*100 P}
-      end 
-   end
-
-   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %Helpers pour l'echantillonnage
 
    %helper pour determiner la hauteur d'une note etendue 
@@ -429,7 +409,6 @@ define
       [] partition(Partition)|MusicPart then {Append {ECHSPartition Partition P2T} {Mix P2T MusicPart}}
       [] repeat(amount:N Music)|MusicPart then {Append {Repeat N Music P2T} {Mix P2T MusicPart}}
       [] wave(Filename)|MusicPart then {Append {Wave Filename} {Mix P2T MusicPart}}
-      [] wave(Filename)|MusicPart then {Append {Wave Filename} {Mix P2T MusicPart}}
       [] merge(Musics_W_I)|MusicPart then {Append {Merge Musics_W_I P2T} {Mix P2T MusicPart}}
       [] loop(seconds:S Music)|MusicPart then {Append {Loop S Music P2T} {Mix P2T MusicPart}}
       [] clip(low:Sample_low high:Sample_high Music)|MusicPart then {Append {Clip Sample_low Sample_high P2T Music} {Mix P2T MusicPart}}
@@ -482,9 +461,16 @@ define
    fun {Echo Delay Decay Repeat Music P2T}
       local OSamples Res ToMerge in 
          OSamples = {Mix P2T Music}
-         ToMerge = {Append [1.0#[samples(OSamples)]] {MakeEchos Delay Decay Repeat OSamples}}
-         thread Res = {Merge ToMerge P2T} end 
-         Res 
+         if OSamples == nil then nil
+         elseif Repeat == 0 then OSamples
+         elseif Delay =< 0.0 then OSamples
+         elseif Decay < 0.0 then OSamples
+         elseif Decay > 1.0 then OSamples
+         else 
+            ToMerge = {Append [1.0#[samples(OSamples)]] {MakeEchos Delay Decay Repeat OSamples}}
+            thread Res = {Merge ToMerge P2T} end 
+            Res
+         end 
       end 
    end
 
@@ -557,10 +543,13 @@ define
 
    fun {Merge MWI P2T}
       local ListofList ResLen Res in
-         ListofList = {AddSilenceToLofL {CreateLofLWI MWI P2T}}
-         ResLen = {FindBL ListofList}
-         Res = {SumLists ListofList ResLen}
-         Res
+         if MWI == nil then nil 
+         else 
+            ListofList = {AddSilenceToLofL {CreateLofLWI MWI P2T}}
+            ResLen = {FindBL ListofList}
+            Res = {SumLists ListofList ResLen}
+            Res
+         end 
       end 
    end
 
@@ -568,7 +557,6 @@ define
 
    fun {Clip Low High P2T Music}
       local Ech Res ClipRec in 
-         Ech = {Mix P2T Music}
 
          fun {ClipRec EchRec}
             case EchRec of nil then nil
@@ -578,8 +566,11 @@ define
                else E|{ClipRec S} end
             end  
          end 
-
-         if Low > High then Ech 
+         Ech = {Mix P2T Music}
+         if Ech == nil then nil 
+         elseif Low > High then Ech
+         elseif Low < ~1.0 then Ech 
+         elseif High > 1.0 then Ech 
          else 
             thread Res = {ClipRec Ech} end 
             Res 
@@ -590,11 +581,7 @@ define
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    
    fun {Loop D Music P2T}
-      local Ech NewLen Res NewList LoopRec in 
-         NewLen = {FloatToInt D*44100.0}
-         Ech = {Mix P2T Music}
-         NewList = {MakeList NewLen}
-
+      local Ech NewLen Res NewList LoopRec in
          fun {LoopRec A Original}
             if A =< 0 then nil 
             else 
@@ -602,13 +589,22 @@ define
                [] S|T then S|{LoopRec A-1 T}
                end 
             end 
+         end
+         NewLen = {FloatToInt D*44100.0}
+         Ech = {Mix P2T Music}
+         NewList = {MakeList NewLen}
+
+         if Ech == nil then nil
+         elseif D =< 0.0 then nil 
+         else 
+            thread Res = {LoopRec NewLen Ech} end 
+            Res
          end 
-         thread Res = {LoopRec NewLen Ech} end 
-         Res 
       end 
    end
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
    fun {Repeat N Music P2T}
       local Samples RepeatRec Res in
          Samples = {Mix P2T Music}
@@ -616,9 +612,6 @@ define
             if Count =< 0 then nil
             else {Append Samples {RepeatRec (Count-1) Samples}} end 
          end
-      
-
-      
          if N =< 0 then nil
          elseif Samples == nil then nil
          else
@@ -640,8 +633,8 @@ define
          [] H|T then {DropSamples (N-1) T} end
       end
    end
-   %permet de prendre un échantillon
    
+   %permet de prendre un échantillon
    fun {TakeSamples N L}
       if N =< 0 then nil
       else case L of H|T then H|{TakeSamples (N-1) T}
@@ -649,12 +642,12 @@ define
       end
    end
    
-   
    %permet de calculer la multiplication entre de listes
    fun {MultList L1 L2}
       case L1#L2 of nil#nil then nil 
       [] (H1|T1)#(H2|T2) then (H1*H2)|{MultList T1 T2} end
-   end 
+   end
+
    %contruire une liste de n éléments
    fun {Build N F}
       fun {Aux I}
@@ -675,9 +668,11 @@ define
          ApresDebut = {DropSamples Debut LesEchantillons}
          Echantillon = {TakeSamples (Fin - Debut) ApresDebut}
          Manque = (Fin - Debut) - {Length Echantillon}
-         Silence = {Zero Manque+1}
+         Silence = {Zero Manque}
       in
-         if (Finish - Start) > Duree then {Append Echantillon Silence}
+         if Finish > Duree then {Append Echantillon Silence}
+         elseif Start > Duree then {Append Echantillon Silence}
+         elseif Start < 0.0 then Echantillon
          else
             Echantillon
          end
@@ -701,22 +696,6 @@ define
       end
    end
    
-   fun {Fade Start Finish Music P2T}
-      local Samples TotalSamples Debut Fin Mask Duree in
-
-         Samples = {Mix P2T Music}
-         TotalSamples = {Length Samples}
-         Duree = {IntToFloat TotalSamples}*44100.0
-         Debut = {FloatToInt (Start * 44100.0)}+1 
-         Fin = {FloatToInt (Finish * 44100.0)}+1
-         if Duree < (Start + Finish) then Samples  
-         else
-            Mask = {BuildMask Debut Fin TotalSamples}
-            {MultList Samples Mask}
-         end
-      end
-   end
-    
    fun {BuildMask Debut Fin TotalSamples}
       FadeIn = {Build Debut fun {$ I} {IntToFloat I} / {IntToFloat (Debut - 1)} end}
       FadeOut = {Build Fin fun {$ I} 1.0 - ({IntToFloat I} / {IntToFloat (Fin - 1)}) end}
@@ -726,187 +705,21 @@ define
       {Append FadeIn {Append Middle FadeOut}}
    end
 
-   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   %{Browse {Fade 0.000113378 0.000113378 [samples([1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0])] PartitionToTimedList}}
-   %{Browse {Fade 0.5 0.5 [partition([a b])] PartitionToTimedList}}
-   %{Browse {Fade 0.5 0.5 [partition([silence(duration:1.5)])] PartitionToTimedList}}
-   %{Browse {Fade 0.5 0.5 [partition([a b c d e f g])] PartitionToTimedList}}
-   
-   %{Browse {Fade 0.5 1.0 [partition([a b])] PartitionToTimedList}}
-   %{Browse {Mix PartitionToTimedList [partition([a])]}}
-   /*
-   % On construit une “musique” minimale : une partition [a] (la note A4 d’une seconde)
-      Music = [partition([a])]
+   fun {Fade Start Finish Music P2T}
+      local Samples TotalSamples Debut Fin Mask Duree in
 
-   % On applique un fondu de 0.5 s en entrée et de 0.5 s en sortie
-      FadeSamples = {Fade 0.5 0.5 Music PartitionToTimedList}
-
-   in
-   % Affiche les 5 premiers échantillons après le fade-in
-      {Browse {TakeSamples 5 FadeSamples}}
-   % Affiche les 5 derniers échantillons avant le fade-out
-      {Browse {TakeSamples 5 {List.reverse FadeSamples}}}
-   end*/
-
-   
-   /*
-      fun {Ones N}
-         if N == 0 then nil else 1.0|{Ones N-1} end
-      end
-
-      % Test avec 10 samples (durée équivalente: 10/44100 ≈ 0.00022676 sec)
-      Music = [samples({Ones 10})] 
-      Start = 2.0/44100.0 % Fade-in sur 2 samples
-      Finish = 3.0/44100.0 % Fade-out sur 3 samples
-      FadeSamples = {Fade Start Finish Music PartitionToTimedList}
-   in
-      {Browse FadeSamples} */
-   % Résultat attendu : [0.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 0.5 0.0]
-   /*local
-      TakeSamples
-      Music = [partition([a])] % Note A4 de 1 seconde
-      FadeSamples = {Fade 0.5 0.5 Music PartitionToTimedList}
-   in
-      {Browse {TakeSamples 5 FadeSamples}} % Début : [0.0 0.0002 0.0004 ...]
-      {Browse {TakesSamples 5 {Reverse FadeSamples}}} % Fin : [0.0004 0.0002 0.0 ...]
-   end*/
-   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   %a effacer
-   %helper pour changer la duration d'un accord
-   fun {ChangeDChord EChord Ratio}
-      case EChord of nil then nil 
-      [] note(name:Note octave:O sharp:Bol duration:D instrument:I)|Ns then 
-         note(name:Note octave:O sharp:Bol duration:D*Ratio instrument:I)|{ChangeDChord Ns Ratio}
-      end 
-   end 
-
-   %Helper pour determiner la duration totale d'une Flat partition
-   fun {TotalDuration Fp}
-      fun {TotalDurationA Fp A}
-         case Fp of nil then A 
-         [] silence(duration:D)|Pi then {TotalDurationA Pi A+D}
-         [] note(name:Note octave:O sharp:Bol duration:D instrument:I)|Pi then {TotalDurationA Pi A+D}
-         %case ou on a un accord  
-         [] L|Pi andthen {IsExtendedChord L} == true then {TotalDurationA Pi A+{TotalDurationChord L}}
-         else 0.0 end 
-      end 
-   in 
-      {TotalDurationA Fp 0.0}
-   end
-
-   %Helper pour determiner la duration d'un accord
-   fun {TotalDurationChord EChord}
-      case EChord of nil then 0.0 
-      [] note(name:Note octave:O sharp:Bol duration:D instrument:I)|_ then D %car toutes les notes dans 1 accord on la meme duration
-      end 
-   end
-   
-   fun {PartitionToTimedList Partition} 
-      %case sur partition pour different cas: <note>|<chord>|<extended note>|<extended chord>|<transformation
-      case Partition of nil then nil
-      %completer pour transformations
-      [] duration(second:S SubPartition)|P then
-            {Append {PartitionToTimedList {Duration S SubPartition}} {PartitionToTimedList P}}
-      [] stretch(factor:F SubPartition)|P then
-            {Append {PartitionToTimedList {Stretch F SubPartition}} {PartitionToTimedList P}}
-      [] drone(sound:S amount:A)|P then
-            {Append {PartitionToTimedList {Drone S A}} {PartitionToTimedList P}}
-      [] mute(amount:A)|P then
-            {Append {PartitionToTimedList {Mute A}} {PartitionToTimedList P}}
-      [] transpose(semi:S SubPartition)|P then
-            {Append {PartitionToTimedList {Transpose S SubPartition}} {PartitionToTimedList P}}
-      [] Pi|P andthen {IsNote Pi} == true then {NoteToExtended Pi} | {PartitionToTimedList P} 
-      [] Pi|P andthen {IsChord Pi} == true then {ChordToExtended Pi} | {PartitionToTimedList P}
-      [] Pi|P then
-            if ({IsExtendedChord Pi} == true) then Pi | {PartitionToTimedList P}
-            elseif ({IsExtendedChord Pi} == false) then {Exception.failure failure(invalidChord:Pi)} end 
-      else {Exception.failure failure(invalidArgument:Partition)}
-      end
-   end
-
-   %Duration
-   fun {Duration Second Partition}
-      local FlatPartition Ratio TD DurationInter in 
-         FlatPartition = {PartitionToTimedList Partition}
-         TD = {TotalDuration FlatPartition}
-
-         if TD == 0.0 then Ratio = 1.0
-         else Ratio = Second/TD end
-
-         fun {DurationInter Fp}
-            case Fp of nil then nil 
-            [] silence(duration:D)|P then silence(duration:(D*Ratio))|{DurationInter P}
-            [] note(name:Note octave:O sharp:Bol duration:D instrument:I)|P then 
-                  note(name:Note octave:O sharp:Bol duration:D*Ratio instrument:I)|{DurationInter P}
-            [] L|P andthen {IsExtendedChord L} == true then {ChangeDChord L Ratio}|{DurationInter P}
-            end
-         end 
-         
-         {DurationInter FlatPartition}
-      end
-   end
-
-   %stretch
-   fun {Stretch Factor Partition}
-      local
-         FlatList
-         Accumulator
-      in
-         FlatList = {PartitionToTimedList Partition}
-         Accumulator = {NewCell nil}
-         for J in FlatList do
-            case J of note(name:N octave:O sharp:S duration:D instrument:I) then
-                  Accumulator := note(name:N octave:O sharp:S duration:D*Factor instrument:I) | @Accumulator
-            [] silence(duration:D) then
-                  Accumulator := silence(duration:D*Factor) | @Accumulator
-            [] rest(duration:D) then
-                  Accumulator := rest(duration:D*Factor) | @Accumulator
-            [] ChordList then
-                  local
-                     NewChordAccumulator
-                  in
-                     NewChordAccumulator = {NewCell nil}
-                     for chord in ChordList do
-                        NewChordAccumulator := note(name:chord.name octave:chord.octave sharp:chord.sharp duration:chord.duration*Factor instrument:chord.instrument) | @NewChordAccumulator
-                     end
-                     Accumulator :=  {List.reverse @NewChordAccumulator} | @Accumulator
-                  end
-            end
-         end
-         {List.reverse @Accumulator}
-      end
-   end
-   
-   %Drone
-   %Amout > 0 
-   fun {Drone NoteOrChord Amount}
-      local ExtendedNote ExtendedChord DroneA in  
-         fun {DroneA NoteOrChord A Acc}
-            if A =< 0 then Acc
-            else {DroneA NoteOrChord A-1 NoteOrChord|Acc} end 
-         end
-
-         if {IsNote NoteOrChord} == true then 
-            ExtendedNote = {NoteToExtended NoteOrChord}
-            {DroneA ExtendedNote Amount nil}
-         elseif {IsChord NoteOrChord} == true then 
-            ExtendedChord = {ChordToExtended NoteOrChord}
-            {DroneA ExtendedChord Amount nil}
-         elseif {IsExtendedChord NoteOrChord} == true then 
-            ExtendedChord = NoteOrChord
-            {DroneA ExtendedChord Amount nil}
-         else {Exception.failure failure(invalidNoteOrChord:NoteOrChord)} end
-      end 
-   end
-
-   %Mute
-   fun{Mute Amount}
-      fun {MakeSilences N}
-         if N == 0 then nil
-         else silence(duration:1.0) | {MakeSilences N-1}
+         Samples = {Mix P2T Music}
+         TotalSamples = {Length Samples}
+         Duree = {IntToFloat TotalSamples}/44100.0
+         Debut = {FloatToInt (Start * 44100.0)}+1 
+         Fin = {FloatToInt (Finish * 44100.0)}+1
+         if Duree < (Start + Finish) then Samples
+         elseif Start < 0.0 then Samples   
+         else
+            Mask = {BuildMask Debut Fin TotalSamples}
+            {MultList Samples Mask}
          end
       end
-   in
-      {MakeSilences Amount}
    end
+
 end
